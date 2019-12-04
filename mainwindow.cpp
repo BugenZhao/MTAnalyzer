@@ -3,6 +3,9 @@
 #include <QtWidgets>
 #include "querywidget.h"
 #include <string>
+#include "dataimportingthread.h"
+#include <QtConcurrent>
+#include <QFuture>
 
 using std::string;
 
@@ -15,9 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
     auto importAction = new QAction(tr("&Open data set folder..."), this);
     auto fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(importAction);
-    connect(importAction, &QAction::triggered, this, &MainWindow::importDataSet);
+    connect(importAction, &QAction::triggered, this, &MainWindow::peekDataSet);
 
-    connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::test);
+    connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::filteredImportMt);
 
     db.setDatabaseName("file::memory:");
     db.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
@@ -53,7 +56,7 @@ void MainWindow::setupUi() {
     connect(this, &MainWindow::percentageComplete, ui->progressBar, &QProgressBar::setValue);
 }
 
-void MainWindow::importDataSet() {
+void MainWindow::peekDataSet() {
 //    auto dir = QFileDialog::getExistingDirectory(this, tr("Select data set directory"));
     auto dir = QString("/Users/bugenzhao/Codes/CLionProjects/FinalProject/dataset_CS241");
     if (dir.isEmpty()) { return; }
@@ -157,7 +160,7 @@ void MainWindow::updateFilterWidgetOthers(const QStringList &lines, const QStrin
     }
 }
 
-void MainWindow::test() {
+void MainWindow::filteredImport() {
     QSet<QString> newCsvs;
     for (int i = 0; i < dataSetItem->childCount(); ++i) {
         auto date = dataSetItem->child(i);
@@ -243,11 +246,114 @@ void MainWindow::test() {
         threadDb.commit();
         threadDb.close();
     });
+
     connect(thread, &QThread::started, this, &MainWindow::onImportStarted);
     connect(thread, &QThread::finished, this, &MainWindow::onImportFinished);
     connect(thread, &QThread::finished, [this, newCsvs] { curCsvs = newCsvs; });
 
     thread->start();
+}
+
+void MainWindow::filteredImportMt() {
+    QSet<QString> newCsvs;
+    for (int i = 0; i < dataSetItem->childCount(); ++i) {
+        auto date = dataSetItem->child(i);
+        for (int j = 0; j < date->childCount(); ++j) {
+            auto child = date->child(j);
+            if (child->checkState(0) == Qt::Checked && child->text(1) == "DATA")
+                newCsvs.insert(child->text(0));
+        }
+    }
+
+    QList<QString> toInsert;
+    QList<QString> toDelete;
+
+    for (const auto &csv:curCsvs) {
+        if (!newCsvs.contains(csv)) toDelete.append(csv);
+    }
+    for (const auto &csv:newCsvs) {
+        if (!curCsvs.contains(csv)) toInsert.append(csv);
+    }
+
+    qInfo() << toInsert;
+    qInfo() << toDelete;
+
+    QSqlQuery query(db);
+    db.transaction();
+    for (const auto &csv:toDelete) {
+        query.prepare("DELETE FROM bz WHERE file = :file");
+        query.bindValue(":file", fileId[csv]);
+        if (!query.exec())
+            qInfo() << query.lastError().text();
+    }
+    db.commit();
+
+    auto future = QtConcurrent::mapped(toInsert, [this](const QString &csv) -> QString {
+
+
+//        auto threadDb = QSqlDatabase::addDatabase("QSQLITE",
+//                                                  QString::number(quintptr(QThread::currentThreadId())));
+//        threadDb.setDatabaseName("file::memory:");
+//        threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
+//        threadDb.open();
+//        qInfo() << threadDb.tables();
+//
+//        threadDb.transaction();
+//
+//        QSqlQuery query(threadDb);
+
+
+        auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
+        QFile csvFile(filePath);
+        qInfo() << filePath;
+        return "sdsdfd";
+
+//        if (!csvFile.open(QFile::ReadOnly | QFile::Text)) {
+//            return {};
+//            //TODO
+//        }
+//
+//        QTextStream stream(&csvFile);
+//        stream.readLine();
+//
+//        query.prepare("INSERT INTO bz VALUES (:file,:1,:2,:3,:4,:5,:6)");
+//
+//        while (!stream.atEnd()) {
+//            auto line = stream.readLine();
+//            auto pieces = line.split(',');
+//
+//            query.bindValue(":file", fileId[csv]);
+//            for (int i = 0; i < 7; ++i) {
+//                if (i == 2 || i == 3 || i == 4)
+//                    query.bindValue(i + 1, pieces[i].toInt());
+//                else if (i == 6)
+//                    query.bindValue(6, pieces[i].toInt());
+//                else if (i == 5)
+//                    continue;
+//                else
+//                    query.bindValue(i + 1, pieces[i]);
+//            }
+//            if (!query.exec())
+//                qInfo() << query.lastError().text();
+//        }
+//
+//        threadDb.commit();
+//        threadDb.close();
+//        return QStringList();
+    });
+    for (const auto &obj:toInsert) qInfo() << obj;
+
+//    for (const auto &csv:toInsert) {
+//        QThreadPool::globalInstance()->start(
+//                reinterpret_cast<QRunnable *>(new DataImportingThread(csv, dataSetDir, fileId)));
+//    }
+
+
+//    connect(thread, &QThread::started, this, &MainWindow::onImportStarted);
+//    connect(thread, &QThread::finished, this, &MainWindow::onImportFinished);
+//    connect(thread, &QThread::finished, [this, newCsvs] { curCsvs = newCsvs; });
+//
+//    thread->start();
 }
 
 
