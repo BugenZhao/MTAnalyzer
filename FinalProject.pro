@@ -25,11 +25,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        dataimportingthread.cpp \
         main.cpp \
         mainwindow.cpp \
         querywidget.cpp
 
 HEADERS += \
+        dataimportingthread.h \
         mainwindow.h \
         querywidget.h
 

@@ -7,6 +7,8 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
+#include "querywidget.h"
+//#include "dataimportingthread.h"
 
 
 namespace Ui {
@@ -25,8 +27,17 @@ public:
 
     void importDataSet();
 
+signals:
+
+    void percentageComplete(int);
+
 private slots:
+
     void on_tabs_currentChanged(int index);
+
+    void onImportStarted();
+
+    void onImportFinished();
 
 private:
     Ui::MainWindow *ui;
@@ -35,12 +46,14 @@ private:
     QDir adjacencyDir = QDir();
 
     QTreeWidgetItem *dataSetItem;
+    QueryWidget *queryWidget;
 
     QVector2D *adj = nullptr;
 
     QSqlDatabase db;
     QHash<int, QVector<Record>> data;
     QMap<QString, int> fileId;
+    QSet<QString> curCsvs;
 
     const QString timeFormat = "yyyy-MM-dd hh:mm:ss";
 
@@ -53,6 +66,8 @@ private:
     void updateFilterWidgetOthers(const QStringList &lines, const QStringList &payTypes);
 
     void test();
+
+    friend class DataImportingThread;
 };
 
 #endif // MAINWINDOW_H

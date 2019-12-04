@@ -16,6 +16,8 @@ public:
 
     ~QueryWidget();
 
+    void setBzEnabled(bool enabled);
+
 private:
     Ui::QueryWidget *ui;
     QSqlDatabase *pDb;

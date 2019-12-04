@@ -21,4 +21,9 @@ void QueryWidget::doQuery() {
     ui->resultTable->setModel(model);
     model->setQuery(ui->queryInput->toPlainText(), *pDb);
     model->query();
+    while (model->canFetchMore()) model->fetchMore();
+}
+
+void QueryWidget::setBzEnabled(bool enabled) {
+    ui->queryButton->setEnabled(enabled);
 }
