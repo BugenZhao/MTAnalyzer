@@ -1,13 +1,17 @@
 #include <QSqlQueryModel>
 #include <QSqlQuery>
+#include <QThread>
 #include "querywidget.h"
 #include "ui_querywidget.h"
 
 QueryWidget::QueryWidget(QSqlDatabase *pDb, QWidget *parent) :
         pDb(pDb),
         QWidget(parent),
-        ui(new Ui::QueryWidget) {
+        ui(new Ui::QueryWidget),
+        model(new QSqlQueryModel(this)) {
     ui->setupUi(this);
+
+    ui->resultTable->setModel(model);
 
     connect(ui->queryButton, &QPushButton::clicked, this, &QueryWidget::doQuery);
 }
@@ -17,11 +21,14 @@ QueryWidget::~QueryWidget() {
 }
 
 void QueryWidget::doQuery() {
-    auto model = new QSqlQueryModel(this);
-    ui->resultTable->setModel(model);
+    ui->queryButton->setEnabled(false);
+
     model->setQuery(ui->queryInput->toPlainText(), *pDb);
     model->query();
     while (model->canFetchMore()) model->fetchMore();
+
+    ui->resultTable->resizeColumnsToContents();
+    ui->queryButton->setEnabled(true);
 }
 
 void QueryWidget::setBzEnabled(bool enabled) {

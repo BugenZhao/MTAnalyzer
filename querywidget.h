@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QSqlDatabase>
+#include <QSqlQueryModel>
 
 namespace Ui {
     class QueryWidget;
@@ -21,6 +22,7 @@ public:
 private:
     Ui::QueryWidget *ui;
     QSqlDatabase *pDb;
+    QSqlQueryModel *model;
 
     void doQuery();
 };
