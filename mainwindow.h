@@ -8,6 +8,8 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include "querywidget.h"
+#include "pathsearchwidget.h"
+#include "utilities/base.hpp"
 //#include "dataimportingthread.h"
 
 
@@ -19,13 +21,11 @@ class MainWindow : public QMainWindow {
 Q_OBJECT
 
 public:
-    using Record=QString;
-
     explicit MainWindow(QWidget *parent = nullptr);
 
     ~MainWindow();
 
-    void importDataSet();
+    void preloadDataSets();
 
 signals:
 
@@ -44,30 +44,37 @@ private:
     QDir mainDir = QDir();
     QDir dataSetDir = QDir();
     QDir adjacencyDir = QDir();
+    QString adjacencyFilePath;
 
-    QTreeWidgetItem *dataSetItem;
+    QTreeWidgetItem *importItem;
     QueryWidget *queryWidget;
+    PathSearchWidget *pathSearchWidget;
 
-    QVector2D *adj = nullptr;
+    Adj adj;
 
     QSqlDatabase db;
     QHash<int, QVector<Record>> data;
     QMap<QString, int> fileId;
     QSet<QString> curCsvs;
-
-    const QString timeFormat = "yyyy-MM-dd hh:mm:ss";
+    bool curUserIdChecked = false;
 
     void setupUi();
 
-    void updateFilterWidgetAdjacency();
+    void updateFilterWidgetImportAdjacency(QTreeWidgetItem *parent);
 
-    void updateFilterWidgetDataSet();
+    void updateFilterWidgetImportDataSet(QTreeWidgetItem *parent);
 
-    void updateFilterWidgetOthers(const QStringList &lines, const QStringList &payTypes);
+    void updateFilterWidgetImportFields(QTreeWidgetItem *parent);
 
-    void test();
+    void updateFilterWidgetFiltersFields(const QStringList &payTypes, const QStringList &lines);
 
-    friend class DataImportingThread;
+    void importFilteredData();
+
+    void importFilteredDataMt();
+
+    void importAdjacency();
+
+    void importFilteredAll();
 };
 
 #endif // MAINWINDOW_H

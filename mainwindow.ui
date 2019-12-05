@@ -38,7 +38,7 @@
       </widget>
       <widget class="QWidget" name="tab3">
        <attribute name="title">
-        <string>Query</string>
+        <string>Database</string>
        </attribute>
       </widget>
      </widget>
@@ -61,7 +61,7 @@
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
-    <string>Filter</string>
+    <string>Import &amp; Filters</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -144,7 +144,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Filter</string>
+              <string>Process</string>
              </property>
             </widget>
            </item>

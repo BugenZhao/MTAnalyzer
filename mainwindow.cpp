@@ -18,9 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
     auto importAction = new QAction(tr("&Open data set folder..."), this);
     auto fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(importAction);
-    connect(importAction, &QAction::triggered, this, &MainWindow::peekDataSet);
+    connect(importAction, &QAction::triggered, this, &MainWindow::preloadDataSets);
 
-    connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::filteredImportMt);
+    connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::importFilteredAll);
 
     db.setDatabaseName("file::memory:");
     db.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
@@ -35,18 +35,29 @@ MainWindow::MainWindow(QWidget *parent)
                           "  \"stationID\" integer,\n"
                           "  \"deviceID\" integer,\n"
                           "  \"status\" integer,\n"
-                          // "  \"userID\" text(80),\n"
-                          "  \"payType\" integer\n"
+                          "  \"payType\" integer,\n"
+                          "  \"userID\" text(40)\n"
                           ");");
     qInfo() << query.exec("\n"
-                          "CREATE INDEX \"time\"\n"
+                          "CREATE INDEX \"userID\"\n"
                           "ON \"bz\" (\n"
-                          "  \"time\"\n"
+                          "  \"userID\"\n"
+                          ");");
+    qInfo() << query.exec("\n"
+                          "CREATE INDEX \"file\"\n"
+                          "ON \"bz\" (\n"
+                          "  \"file\"\n"
                           ");");
 }
 
 void MainWindow::setupUi() {
     ui->filterTree->setHeaderLabels({tr("Filters")});
+
+    auto tab2Layout = new QVBoxLayout(ui->tab2);
+    pathSearchWidget = new PathSearchWidget(&adj, this);
+    tab2Layout->addWidget(pathSearchWidget);
+    ui->tab2->setLayout(tab2Layout);
+
     auto tab3Layout = new QVBoxLayout(ui->tab3);
     queryWidget = new QueryWidget(&db, this);
     tab3Layout->addWidget(queryWidget);
@@ -56,7 +67,7 @@ void MainWindow::setupUi() {
     connect(this, &MainWindow::percentageComplete, ui->progressBar, &QProgressBar::setValue);
 }
 
-void MainWindow::peekDataSet() {
+void MainWindow::preloadDataSets() {
 //    auto dir = QFileDialog::getExistingDirectory(this, tr("Select data set directory"));
     auto dir = QString("/Users/bugenzhao/Codes/CLionProjects/FinalProject/dataset_CS241");
     if (dir.isEmpty()) { return; }
@@ -66,22 +77,34 @@ void MainWindow::peekDataSet() {
     dataSetDir = mainDir;
     dataSetDir.cd("dataset");
 
-    updateFilterWidgetAdjacency();
-    updateFilterWidgetDataSet();
 
-    updateFilterWidgetOthers({}, {});
+    importItem = new QTreeWidgetItem(ui->filterTree);
+    importItem->setText(0, tr("Import"));
+    importItem->setText(1, tr("IMPORT"));
+    importItem->setCheckState(0, Qt::Checked);
+    importItem->setFlags(importItem->flags() & (~Qt::ItemIsUserCheckable) | Qt::ItemIsAutoTristate);
+    importItem->setExpanded(true);
+
+
+    updateFilterWidgetImportAdjacency(importItem);
+    updateFilterWidgetImportDataSet(importItem);
+    updateFilterWidgetImportFields(importItem);
+    updateFilterWidgetFiltersFields({}, {});
+
+    importAdjacency();
 
     ui->filterButton->setEnabled(true);
+    queryWidget->setBzEnabled(false);
 }
 
-void MainWindow::updateFilterWidgetAdjacency() {
+void MainWindow::updateFilterWidgetImportAdjacency(QTreeWidgetItem *parent) {
     auto adjacencyCsv = adjacencyDir.entryList(QStringList() << "*.csv", QDir::Files)[0];
 
-    auto adjacencyItem = new QTreeWidgetItem(ui->filterTree);
+    auto adjacencyItem = new QTreeWidgetItem(parent);
     adjacencyItem->setText(0, tr("Adjacency table"));
     adjacencyItem->setText(1, tr("ADJ_TABLE"));
     adjacencyItem->setCheckState(0, Qt::Checked);
-    adjacencyItem->setFlags(adjacencyItem->flags() | Qt::ItemIsAutoTristate);
+    adjacencyItem->setFlags(adjacencyItem->flags());
     adjacencyItem->setDisabled(true);
 
     auto csvItem = new QTreeWidgetItem(adjacencyItem);
@@ -91,7 +114,23 @@ void MainWindow::updateFilterWidgetAdjacency() {
     csvItem->setFlags(csvItem->flags() | Qt::ItemIsAutoTristate);
 }
 
-void MainWindow::updateFilterWidgetDataSet() {
+void MainWindow::updateFilterWidgetImportFields(QTreeWidgetItem *parent) {
+    auto fieldsItem = new QTreeWidgetItem(parent);
+    fieldsItem->setText(0, tr("Fields"));
+    fieldsItem->setText(1, tr("FIELDS"));
+    fieldsItem->setCheckState(0, Qt::Unchecked);
+    fieldsItem->setFlags(fieldsItem->flags() | Qt::ItemIsAutoTristate);
+    fieldsItem->setExpanded(true);
+
+    auto userIdItem = new QTreeWidgetItem(fieldsItem);
+    userIdItem->setText(0, tr("User ID"));
+    userIdItem->setText(1, tr("USER_ID"));
+    userIdItem->setCheckState(0, Qt::Unchecked);
+    userIdItem->setFlags(userIdItem->flags() | Qt::ItemIsAutoTristate);
+}
+
+
+void MainWindow::updateFilterWidgetImportDataSet(QTreeWidgetItem *parent) {
     auto dataSets = dataSetDir.entryList(QStringList() << "*.csv", QDir::Files);
     auto datesMap = QMap<QString, QVector<QString>>();
 
@@ -106,7 +145,7 @@ void MainWindow::updateFilterWidgetDataSet() {
         }
     }
 
-    dataSetItem = new QTreeWidgetItem(ui->filterTree);
+    auto dataSetItem = new QTreeWidgetItem(parent);
     dataSetItem->setText(0, tr("Data sets"));
     dataSetItem->setText(1, "DATA_SETS");
     dataSetItem->setCheckState(0, Qt::Checked);
@@ -118,20 +157,32 @@ void MainWindow::updateFilterWidgetDataSet() {
         auto dateItem = new QTreeWidgetItem(dataSetItem);
         dateItem->setText(0, date);
         dateItem->setText(1, "DATE");
-        dateItem->setCheckState(0, Qt::Checked);
+        dateItem->setCheckState(0, Qt::Unchecked);
         dateItem->setFlags(dateItem->flags() | Qt::ItemIsAutoTristate);
 
         for (const auto &csv:datesMap[date]) {
             auto csvItem = new QTreeWidgetItem(dateItem);
             csvItem->setText(0, csv);
             csvItem->setText(1, "DATA");
-            csvItem->setCheckState(0, Qt::Checked);
+            csvItem->setCheckState(0, Qt::Unchecked);
+            csvItem->setFlags(csvItem->flags() | Qt::ItemIsAutoTristate);
         }
     }
+
+    if (dataSetItem->childCount() != 0)
+        dataSetItem->child(0)->setCheckState(0, Qt::Checked);
 }
 
-void MainWindow::updateFilterWidgetOthers(const QStringList &lines, const QStringList &payTypes) {
-    auto linesItem = new QTreeWidgetItem(ui->filterTree);
+void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, const QStringList &lines) {
+
+    auto filtersFields = new QTreeWidgetItem(ui->filterTree);
+    filtersFields->setText(0, tr("Filters for plots"));
+    filtersFields->setText(1, "FILTERS");
+    filtersFields->setCheckState(0, Qt::Checked);
+    filtersFields->setFlags(filtersFields->flags() | Qt::ItemIsAutoTristate);
+    filtersFields->setExpanded(true);
+
+    auto linesItem = new QTreeWidgetItem(filtersFields);
     linesItem->setText(0, tr("Lines"));
     linesItem->setText(1, "LINES");
     linesItem->setCheckState(0, Qt::Checked);
@@ -145,7 +196,7 @@ void MainWindow::updateFilterWidgetOthers(const QStringList &lines, const QStrin
         item->setFlags(item->flags() | Qt::ItemIsAutoTristate);
     }
 
-    auto payTypesItem = new QTreeWidgetItem(ui->filterTree);
+    auto payTypesItem = new QTreeWidgetItem(filtersFields);
     payTypesItem->setText(0, tr("Payment types"));
     payTypesItem->setText(1, "PAY_TYPES");
     payTypesItem->setCheckState(0, Qt::Checked);
@@ -160,8 +211,11 @@ void MainWindow::updateFilterWidgetOthers(const QStringList &lines, const QStrin
     }
 }
 
-void MainWindow::filteredImport() {
+[[deprecated]] void MainWindow::importFilteredData() {
     QSet<QString> newCsvs;
+
+    auto dataSetItem = importItem->child(1);
+
     for (int i = 0; i < dataSetItem->childCount(); ++i) {
         auto date = dataSetItem->child(i);
         for (int j = 0; j < date->childCount(); ++j) {
@@ -185,8 +239,6 @@ void MainWindow::filteredImport() {
     qInfo() << toDelete;
 
     auto thread = QThread::create([this, toInsert, toDelete] {
-        int total = toInsert.size();
-        int cur = 0;
         emit percentageComplete(0);
 
         auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "thread");
@@ -199,7 +251,8 @@ void MainWindow::filteredImport() {
 
         QSqlQuery query(threadDb);
 
-
+        int total = toInsert.size();
+        int cur = 0;
         for (const auto &csv:toInsert) {
             auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
             QFile csvFile(filePath);
@@ -236,11 +289,16 @@ void MainWindow::filteredImport() {
             emit percentageComplete(int((cur + 0.0) / total * 100));
         }
 
+        total = toDelete.size();
+        cur = 0;
+
         for (const auto &csv:toDelete) {
             query.prepare("DELETE FROM bz WHERE file = :file");
             query.bindValue(":file", fileId[csv]);
             if (!query.exec())
                 qInfo() << query.lastError().text();
+            ++cur;
+            emit percentageComplete(int((cur + 0.0) / total * 100));
         }
 
         threadDb.commit();
@@ -254,124 +312,199 @@ void MainWindow::filteredImport() {
     thread->start();
 }
 
-void MainWindow::filteredImportMt() {
-    QSet<QString> newCsvs;
-    for (int i = 0; i < dataSetItem->childCount(); ++i) {
-        auto date = dataSetItem->child(i);
-        for (int j = 0; j < date->childCount(); ++j) {
-            auto child = date->child(j);
-            if (child->checkState(0) == Qt::Checked && child->text(1) == "DATA")
-                newCsvs.insert(child->text(0));
+void MainWindow::importFilteredDataMt() {
+    auto thread = QThread::create([this] {
+        auto worker = [this](const QString &csv) -> QStringList {
+            auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
+            QFile csvFile(filePath);
+            qInfo() << filePath;
+
+            if (!csvFile.open(QFile::ReadOnly | QFile::Text)) {
+                return {};
+                //TODO
+            }
+
+            QTextStream stream(&csvFile);
+            stream.readLine();
+
+            QStringList queries;
+
+            while (!stream.atEnd()) {
+                auto line = stream.readLine();
+                auto pieces = line.split(',');
+                QStringList queryPieces;
+                queryPieces << QString::number(fileId[csv])
+                            << QString("\"%1\"").arg(pieces[0])
+                            << QString("\"%1\"").arg(pieces[1])
+                            << pieces[2]
+                            << pieces[3]
+                            << pieces[4]
+                            << pieces[6];
+                if (curUserIdChecked) queryPieces << QString("\"%1\"").arg(pieces[5]);
+                else queryPieces << "NULL";
+
+                queries.append(QString("INSERT INTO bz VALUES (%1)").arg(queryPieces.join(", ")));
+            }
+            return queries;
+        };
+
+        auto dataSetItem = importItem->child(1);
+        auto userIdItem = importItem->child(2)->child(0);
+
+        QSet<QString> newCsvs;
+        for (int i = 0; i < dataSetItem->childCount(); ++i) {
+            auto date = dataSetItem->child(i);
+            for (int j = 0; j < date->childCount(); ++j) {
+                auto child = date->child(j);
+                if (child->checkState(0) == Qt::Checked && child->text(1) == "DATA")
+                    newCsvs.insert(child->text(0));
+            }
         }
-    }
 
-    QList<QString> toInsert;
-    QList<QString> toDelete;
+        bool needToReload = false;
+        bool needToClearUserId = false;
 
-    for (const auto &csv:curCsvs) {
-        if (!newCsvs.contains(csv)) toDelete.append(csv);
-    }
-    for (const auto &csv:newCsvs) {
-        if (!curCsvs.contains(csv)) toInsert.append(csv);
-    }
+        if (userIdItem->checkState(0) == Qt::Checked && !curUserIdChecked) {
+            curUserIdChecked = true;
+            needToReload = true;
+        } else if (userIdItem->checkState(0) == Qt::Unchecked && curUserIdChecked) {
+            curUserIdChecked = false;
+            needToClearUserId = true;
+        }
 
-    qInfo() << toInsert;
-    qInfo() << toDelete;
+        auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "thread");
+        threadDb.setDatabaseName("file::memory:");
+        threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
+        threadDb.open();
+        QSqlQuery query(threadDb);
 
-    QSqlQuery query(db);
-    db.transaction();
-    for (const auto &csv:toDelete) {
-        query.prepare("DELETE FROM bz WHERE file = :file");
-        query.bindValue(":file", fileId[csv]);
-        if (!query.exec())
-            qInfo() << query.lastError().text();
-    }
-    db.commit();
-
-    auto future = QtConcurrent::mapped(toInsert, [this](const QString &csv) -> QString {
-
-
-//        auto threadDb = QSqlDatabase::addDatabase("QSQLITE",
-//                                                  QString::number(quintptr(QThread::currentThreadId())));
-//        threadDb.setDatabaseName("file::memory:");
-//        threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-//        threadDb.open();
 //        qInfo() << threadDb.tables();
-//
-//        threadDb.transaction();
-//
-//        QSqlQuery query(threadDb);
 
+        threadDb.transaction();
 
-        auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
-        QFile csvFile(filePath);
-        qInfo() << filePath;
-        return "sdsdfd";
+        if (newCsvs.isEmpty()) {
+            if (!query.exec("DELETE FROM bz"))
+                qInfo() << query.lastError().text();
+        } else {
+            QList<QString> toInsert;
+            QList<QString> toDelete;
 
-//        if (!csvFile.open(QFile::ReadOnly | QFile::Text)) {
-//            return {};
-//            //TODO
-//        }
-//
-//        QTextStream stream(&csvFile);
-//        stream.readLine();
-//
-//        query.prepare("INSERT INTO bz VALUES (:file,:1,:2,:3,:4,:5,:6)");
-//
-//        while (!stream.atEnd()) {
-//            auto line = stream.readLine();
-//            auto pieces = line.split(',');
-//
-//            query.bindValue(":file", fileId[csv]);
-//            for (int i = 0; i < 7; ++i) {
-//                if (i == 2 || i == 3 || i == 4)
-//                    query.bindValue(i + 1, pieces[i].toInt());
-//                else if (i == 6)
-//                    query.bindValue(6, pieces[i].toInt());
-//                else if (i == 5)
-//                    continue;
-//                else
-//                    query.bindValue(i + 1, pieces[i]);
-//            }
-//            if (!query.exec())
-//                qInfo() << query.lastError().text();
-//        }
-//
-//        threadDb.commit();
-//        threadDb.close();
-//        return QStringList();
+            if (needToReload) {
+                if (!query.exec("DELETE FROM bz"))
+                    qInfo() << query.lastError().text();
+                toInsert = newCsvs.toList();
+            } else {
+                for (const auto &csv:curCsvs) {
+                    if (!newCsvs.contains(csv)) toDelete.append(csv);
+                }
+                for (const auto &csv:newCsvs) {
+                    if (!curCsvs.contains(csv)) toInsert.append(csv);
+                }
+            }
+
+            qInfo() << toInsert;
+            qInfo() << toDelete;
+
+            auto results = QtConcurrent::blockingMapped(toInsert, std::function<QStringList(const QString &)>(worker));
+
+            // Delete
+            int total = toDelete.size();
+            int cur = 0;
+
+            for (const auto &csv:toDelete) {
+                query.prepare("DELETE FROM bz WHERE file = :file");
+                query.bindValue(":file", fileId[csv]);
+                if (!query.exec())
+                    qInfo() << query.lastError().text();
+                ++cur;
+                emit percentageComplete(int((cur + 0.0) / total * 100));
+            }
+
+            // Insert
+            total = results.size();
+            cur = 0;
+            for (const auto &result:results) {
+                for (const auto &queryText:result) {
+                    if (!query.exec(queryText))
+                        qInfo() << query.lastError().text();
+                }
+                emit percentageComplete((++cur) * 100 / total);
+            }
+
+            // Clear userId [optional]
+            if (needToClearUserId) {
+                emit percentageComplete(0);
+                if (!query.exec("UPDATE bz SET userId = NULL"))
+                    qInfo() << query.lastError().text();
+                emit percentageComplete(100);
+            }
+        }
+
+        threadDb.commit();
+        threadDb.close();
+
+        curCsvs = newCsvs;
     });
-    for (const auto &obj:toInsert) qInfo() << obj;
 
-//    for (const auto &csv:toInsert) {
-//        QThreadPool::globalInstance()->start(
-//                reinterpret_cast<QRunnable *>(new DataImportingThread(csv, dataSetDir, fileId)));
-//    }
+    connect(thread, &QThread::started, this, &MainWindow::onImportStarted);
+    connect(thread, &QThread::finished, this, &MainWindow::onImportFinished);
 
-
-//    connect(thread, &QThread::started, this, &MainWindow::onImportStarted);
-//    connect(thread, &QThread::finished, this, &MainWindow::onImportFinished);
-//    connect(thread, &QThread::finished, [this, newCsvs] { curCsvs = newCsvs; });
-//
-//    thread->start();
+    thread->start();
 }
 
-
-MainWindow::~MainWindow() { delete ui; }
+MainWindow::~MainWindow() {
+    delete ui;
+}
 
 void MainWindow::on_tabs_currentChanged(int index) {
-//    if (index == 2) resize(1200, 900);
-//    else resize(800, 600);
+    if (index == 2) resize((width() > 1000) ? width() : 1000, height());
+    else resize((width() > 1000) ? width() : 800, height());
 }
 
 void MainWindow::onImportStarted() {
     ui->filterButton->setEnabled(false);
+    ui->progressBar->setValue(0);
     queryWidget->setBzEnabled(false);
+    pathSearchWidget->setBzEnabled(false);
     statusBar()->showMessage("Please wait while data sets are processing...");
 }
 
 void MainWindow::onImportFinished() {
     ui->filterButton->setEnabled(true);
+    ui->progressBar->setValue(100);
     queryWidget->setBzEnabled(true);
+    pathSearchWidget->setBzEnabled(true);
     statusBar()->showMessage("Done", 3000);
+}
+
+void MainWindow::importFilteredAll() {
+    importFilteredDataMt();
+}
+
+void MainWindow::importAdjacency() {
+    auto thread = QThread::create([this]() {
+        auto filePath = adjacencyDir.entryInfoList(QStringList() << "*.csv", QDir::Files)[0]
+                .absoluteFilePath();
+        qInfo() << filePath;
+        QFile adjFile(filePath);
+        if (!adjFile.open(QFile::ReadOnly | QFile::Text)) {
+            return;
+            //TODO
+        }
+        adj = QVector<QVector<bool>>();
+        QTextStream stream(&adjFile);
+        stream.readLine();
+        while (!stream.atEnd()) {
+            QVector<bool> row;
+            auto line = stream.readLine();
+            auto pieces = line.split(',');
+            for (int i = 1; i < pieces.size(); ++i) {
+                row.push_back(pieces[i] == "1");
+            }
+            adj.push_back(row);
+        }
+        qInfo() << adj.size();
+    });
+
+    thread->start();
 }
