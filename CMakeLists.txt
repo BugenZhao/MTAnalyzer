@@ -11,6 +11,7 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /Users/bugenzhao/Qt5.13.0/5.13.0/clan
 
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Sql REQUIRED)
+find_package(Qt5Concurrent REQUIRED)
 
-add_executable(FinalProject main.cpp mainwindow.cpp querywidget.cpp dataimportingthread.cpp)
-target_link_libraries(FinalProject Qt5::Widgets Qt5::Sql)
+add_executable(FinalProject main.cpp mainwindow.cpp querywidget.cpp dataimportingthread.cpp pathsearchwidget.cpp utilities/base.hpp)
+target_link_libraries(FinalProject Qt5::Widgets Qt5::Sql Qt5::Concurrent)

@@ -28,15 +28,18 @@ SOURCES += \
         dataimportingthread.cpp \
         main.cpp \
         mainwindow.cpp \
+        pathsearchwidget.cpp \
         querywidget.cpp
 
 HEADERS += \
         dataimportingthread.h \
         mainwindow.h \
+        pathsearchwidget.h \
         querywidget.h
 
 FORMS += \
         mainwindow.ui \
+        pathsearchwidget.ui \
         querywidget.ui
 
 # Default rules for deployment.
