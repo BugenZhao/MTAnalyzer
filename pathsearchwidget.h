@@ -18,6 +18,10 @@ public:
 
     void setBzEnabled(bool enabled);
 
+signals:
+
+    void statusBarMessage(const QString &message, int timeout = 0);
+
 private:
     Ui::PathSearchWidget *ui;
     Adj *adj;

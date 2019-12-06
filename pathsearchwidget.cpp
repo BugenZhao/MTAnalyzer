@@ -15,6 +15,8 @@ PathSearchWidget::PathSearchWidget(Adj *adj, QWidget *parent) :
         adj(adj),
         ui(new Ui::PathSearchWidget) {
     ui->setupUi(this);
+
+    connect(ui->toEdit, &QLineEdit::returnPressed, this, &PathSearchWidget::doSearch);
     connect(ui->searchButton, &QPushButton::clicked, this, &PathSearchWidget::doSearch);
 
     auto model = new QStandardItemModel(0, 1, this);
@@ -48,13 +50,20 @@ void PathSearchWidget::doSearch() {
 
         if (ok3) {
             auto thread = QThread::create([this, from, to, path]() {
+                auto startTime = QTime::currentTime();
+
                 auto model = reinterpret_cast<QStandardItemModel *>(ui->resultTable->model());
+
+                QString timeInfo = "There's no enough information to get the result. \n"
+                                   "Make sure you have imported the 'User ID' field, "
+                                   "and try to import more data sets.";
 
                 auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "path_thread");
                 threadDb.setDatabaseName("file::memory:");
                 threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
                 threadDb.open();
                 QSqlQuery query(threadDb);
+
                 auto timeOk = query.exec(QString("SELECT\n"
                                                  "\tbz.userID,\n"
                                                  "\ttmp.stationID,\n"
@@ -81,11 +90,7 @@ void PathSearchWidget::doSearch() {
                                                  "\tAND bz.status = 0 \n"
                                                  "GROUP BY\n"
                                                  "\tbz.userID \n"
-                                                 "\tLIMIT 100").arg(from).arg(to));
-
-                QString timeInfo = "There's no enough information to get the result. \n"
-                                   "Make sure you have imported the 'User ID' field, \n"
-                                   "and try to import more data sets.";
+                                                 "\tLIMIT 500").arg(from).arg(to));
 
                 if (timeOk) {
                     auto pathLength = path.split("-").size() - 1;
@@ -107,11 +112,8 @@ void PathSearchWidget::doSearch() {
 
                     }
                     if (!minDts.isEmpty()) {
-                        qlonglong timeSum = 0;
-                        for (auto dt:minDts) timeSum += dt;
-
                         timeInfo = QString("About %1 minutes according to %2 record(s).")
-                                .arg(timeSum / minDts.size()).arg(minDts.size());
+                                .arg(BugenZhao::average(minDts)).arg(minDts.size());
                     }
                 }
 
@@ -119,9 +121,9 @@ void PathSearchWidget::doSearch() {
                 model->setVerticalHeaderLabels(QStringList() << "Path" << "Estimated Time");
                 model->setHorizontalHeaderLabels(QStringList() << "Results");
 
-                ui->resultTable->resizeRowsToContents();
-
                 threadDb.close();
+                emit statusBarMessage(QString("Done in %1s").arg(startTime.msecsTo(QTime::currentTime()) / 1000.0),
+                                      3000);
             });
 
             thread->start();
@@ -174,9 +176,11 @@ QString PathSearchWidget::bfs(int from, int to, bool *ok) {
 }
 
 void PathSearchWidget::onSearchStarted() {
+    emit statusBarMessage("Estimating time...", 0);
     ui->searchButton->setEnabled(false);
 }
 
 void PathSearchWidget::onSearchFinished() {
     ui->searchButton->setEnabled(true);
+    ui->resultTable->resizeRowsToContents();
 }

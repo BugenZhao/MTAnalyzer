@@ -7,7 +7,8 @@
 #include <QMap>
 #include <QRunnable>
 
-class DataImportingThread : public QRunnable {
+
+class [[deprecated]] DataImportingThread : public QRunnable {
 private:
     QString csv;
     QDir dataSetDir;

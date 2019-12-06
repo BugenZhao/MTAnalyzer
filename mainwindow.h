@@ -10,7 +10,7 @@
 #include "querywidget.h"
 #include "pathsearchwidget.h"
 #include "utilities/base.hpp"
-//#include "dataimportingthread.h"
+#include "dataimportingthread.h"
 
 
 namespace Ui {
@@ -23,13 +23,15 @@ Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = nullptr);
 
-    ~MainWindow();
+    ~MainWindow() override;
 
     void preloadDataSets();
 
 signals:
 
     void percentageComplete(int);
+
+    void statusBarMessage(const QString &message, int timeout = 0);
 
 private slots:
 
@@ -46,9 +48,10 @@ private:
     QDir adjacencyDir = QDir();
     QString adjacencyFilePath;
 
-    QTreeWidgetItem *importItem;
-    QueryWidget *queryWidget;
-    PathSearchWidget *pathSearchWidget;
+    QTreeWidgetItem *importItem = nullptr;
+
+    QueryWidget *queryWidget = nullptr;
+    PathSearchWidget *pathSearchWidget = nullptr;
 
     Adj adj;
 
@@ -56,9 +59,10 @@ private:
     QHash<int, QVector<Record>> data;
     QMap<QString, int> fileId;
     QSet<QString> curCsvs;
+
     bool curUserIdChecked = false;
 
-    void setupUi();
+    void setupBzUi();
 
     void updateFilterWidgetImportAdjacency(QTreeWidgetItem *parent);
 
@@ -68,13 +72,15 @@ private:
 
     void updateFilterWidgetFiltersFields(const QStringList &payTypes, const QStringList &lines);
 
-    void importFilteredData();
+    [[deprecated]] void importFilteredData();
 
     void importFilteredDataMt();
 
     void importAdjacency();
 
     void importFilteredAll();
+
+    void onPreloadFinished();
 };
 
 #endif // MAINWINDOW_H

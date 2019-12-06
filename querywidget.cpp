@@ -1,6 +1,7 @@
 #include <QSqlQueryModel>
 #include <QSqlQuery>
 #include <QThread>
+#include <QSqlError>
 #include "querywidget.h"
 #include "ui_querywidget.h"
 
@@ -27,10 +28,17 @@ void QueryWidget::doQuery() {
     model->query();
     while (model->canFetchMore()) model->fetchMore();
 
+    if (model->lastError().type() == QSqlError::NoError)
+            emit statusBarMessage("Done", 3000);
+    else
+            emit statusBarMessage(QString("Query error: %1").
+                arg(model->lastError().databaseText()), 8000);
+
     ui->resultTable->resizeColumnsToContents();
     ui->queryButton->setEnabled(true);
 }
 
 void QueryWidget::setBzEnabled(bool enabled) {
+    if (!enabled) model->clear();
     ui->queryButton->setEnabled(enabled);
 }
