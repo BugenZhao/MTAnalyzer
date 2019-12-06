@@ -10,7 +10,7 @@
 #include "querywidget.h"
 #include "pathsearchwidget.h"
 #include "utilities/base.hpp"
-#include "dataimportingthread.h"
+#include "plotwidget.h"
 
 
 namespace Ui {
@@ -52,6 +52,7 @@ private:
 
     QueryWidget *queryWidget = nullptr;
     PathSearchWidget *pathSearchWidget = nullptr;
+    QVector<PlotWidget *> plotWidgets{};
 
     Adj adj;
 
@@ -81,6 +82,8 @@ private:
     void importFilteredAll();
 
     void onPreloadFinished();
+
+    void testPlot();
 };
 
 #endif // MAINWINDOW_H

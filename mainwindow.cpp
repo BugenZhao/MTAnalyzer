@@ -6,7 +6,6 @@
 #include "dataimportingthread.h"
 #include <QtConcurrent>
 #include <QFuture>
-#include <QtMath>
 
 using std::string;
 
@@ -43,6 +42,24 @@ MainWindow::~MainWindow() {
 
 void MainWindow::setupBzUi() {
     ui->filterTree->setHeaderLabels({tr("Filters")});
+
+    auto tab1Layout = new QVBoxLayout(ui->tab1);
+    tab1Layout->addWidget(ui->plotTabs);
+    tab1Layout->setContentsMargins(0, 0, 0, 0);
+    ui->tab1->setLayout(tab1Layout);
+
+    plotWidgets.clear();
+    for (int i = 0; i < ui->plotTabs->count(); ++i) {
+        auto plotTab = ui->plotTabs->widget(i);
+        auto plotWidget = new PlotWidget(plotTab);
+        plotWidgets.push_back(plotWidget);
+        auto tabLayout = new QVBoxLayout(plotTab);
+        tabLayout->addWidget(plotWidget);
+        tabLayout->setContentsMargins(12, 0, 12, 0);
+        plotTab->setLayout(tabLayout);
+
+        connect(plotWidget, &PlotWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
+    }
 
     auto tab2Layout = new QVBoxLayout(ui->tab2);
     pathSearchWidget = new PathSearchWidget(&adj, this);
@@ -114,6 +131,11 @@ void MainWindow::preloadDataSets() {
     updateFilterWidgetFiltersFields({}, {});
 
     importAdjacency();
+
+    for (const auto &plotWidget:plotWidgets) {
+        plotWidget->bzClear();
+        plotWidget->setDate(importItem->child(1)->child(0)->text(0));
+    }
 
     onPreloadFinished();
 }
@@ -369,7 +391,7 @@ void MainWindow::importFilteredDataMt() {
                 perTimesMs.push_back(t0.msecsTo(QTime::currentTime()));
                 emit statusBarMessage(
                         QString("Please wait while data sets are processing. Remaining time: %1s")
-                                .arg((total - cur) * BugenZhao::average(perTimesMs) / 1000));
+                                .arg((total - cur) * BugenZhao::bAverage(perTimesMs) / 1000));
                 emit percentageComplete((++cur) * 100 / total);
             }
 
@@ -427,8 +449,8 @@ void MainWindow::importAdjacency() {
 }
 
 void MainWindow::on_tabs_currentChanged(int index) {
-    if (index == 2) resize((width() > 1120) ? width() : 1120, height());
-    else resize((width() > 1120) ? width() : 960, height());
+//    if (index == 2) resize((width() > 1120) ? width() : 1120, height());
+//    else resize((width() > 1120) ? width() : 960, height());
 }
 
 void MainWindow::onPreloadFinished() {
@@ -436,6 +458,9 @@ void MainWindow::onPreloadFinished() {
     ui->progressBar->setValue(0);
     queryWidget->setBzEnabled(false);
     pathSearchWidget->setBzEnabled(true);
+    for (auto plotWidget:plotWidgets) {
+        plotWidget->setBzEnabled(false);
+    }
 }
 
 void MainWindow::onImportStarted() {
@@ -443,6 +468,9 @@ void MainWindow::onImportStarted() {
     ui->progressBar->setValue(0);
     queryWidget->setBzEnabled(false);
     pathSearchWidget->setBzEnabled(false);
+    for (auto plotWidget:plotWidgets) {
+        plotWidget->setBzEnabled(false);
+    }
 }
 
 void MainWindow::onImportFinished() {
@@ -450,6 +478,21 @@ void MainWindow::onImportFinished() {
     ui->progressBar->setValue(100);
     queryWidget->setBzEnabled(true);
     pathSearchWidget->setBzEnabled(true);
+    for (auto plotWidget:plotWidgets) {
+        plotWidget->setBzEnabled(true);
+    }
+}
+
+void MainWindow::testPlot() {
+    PlotWidget::BzChartData chartData;
+    chartData.title = "Test";
+    chartData.seriesNames = QStringList() << "Line 1";
+    BDataList dataList;
+    for (int i = 0; i < 10; ++i) {
+        dataList.append(BData{QPointF{static_cast<qreal>(i), static_cast<qreal>(i * i)}, "Test"});
+    }
+    chartData.dataTable = QList<BDataList>() << dataList;
+    plotWidgets[0]->setDateTimeSplineChart(chartData);
 }
 
 

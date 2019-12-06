@@ -101,8 +101,8 @@ void PathSearchWidget::doSearch() {
                         auto sTime1 = query.value(4).toString();
                         if (sTime0.split(' ')[0] != sTime1.split(' ')[0]) continue;
 
-                        auto time0 = QDateTime::fromString(sTime0, BugenZhao::TIME_FORMAT);
-                        auto time1 = QDateTime::fromString(sTime1, BugenZhao::TIME_FORMAT);
+                        auto time0 = QDateTime::fromString(sTime0, BugenZhao::DATE_TIME_FORMAT);
+                        auto time1 = QDateTime::fromString(sTime1, BugenZhao::DATE_TIME_FORMAT);
                         auto minDt = time0.secsTo(time1) / 60;
 
                         if (minDt > pathLength * 2 && minDt <= 6 + pathLength * 4 && minDt <= 240) {
@@ -113,7 +113,7 @@ void PathSearchWidget::doSearch() {
                     }
                     if (!minDts.isEmpty()) {
                         timeInfo = QString("About %1 minutes according to %2 record(s).")
-                                .arg(BugenZhao::average(minDts)).arg(minDts.size());
+                                .arg(BugenZhao::bAverage(minDts)).arg(minDts.size());
                     }
                 }
 
