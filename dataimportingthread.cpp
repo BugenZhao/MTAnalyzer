@@ -7,7 +7,7 @@
 #include <QTextStream>
 #include <QtCore>
 
-DataImportingThread::DataImportingThread(QString csv, const QDir& dataSetDir, QMap<QString, int> fileId)
+DataImportingThread::DataImportingThread(QString csv, const QDir &dataSetDir, QMap<QString, int> fileId)
         : csv(std::move(csv)),
           dataSetDir(dataSetDir),
           fileId(std::move(fileId)) {

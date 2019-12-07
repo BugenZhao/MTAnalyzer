@@ -15,7 +15,7 @@ private:
     QMap<QString, int> fileId;
 
 public:
-    DataImportingThread(QString, const QDir&, QMap<QString, int>);
+    DataImportingThread(QString, const QDir &, QMap<QString, int>);
 
     void run() override;
 

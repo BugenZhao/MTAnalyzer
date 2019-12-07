@@ -1,6 +1,6 @@
 name: Ubuntu
 # Qt官方没有linux平台的x86包
-on: 
+on:
   push:
     paths-ignore:
       - 'README.md'
@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ../Qt/${{matrix.qt_ver}}/${{matrix.qt_arch}}
-          key: ${{ runner.os }}-Qt/${{matrix.qt_ver}}/${{matrix.qt_arch}}    
+          key: ${{ runner.os }}-Qt/${{matrix.qt_ver}}/${{matrix.qt_arch}}
       - name: setupQt
         if: steps.UbuntuCacheQt.outputs.cache-hit == 'true'
         shell: pwsh

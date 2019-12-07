@@ -13,7 +13,7 @@
 PathSearchWidget::PathSearchWidget(Adj *adj, QWidget *parent) :
         QWidget(parent),
         ui(new Ui::PathSearchWidget),
-        adj(adj){
+        adj(adj) {
     ui->setupUi(this);
 
     connect(ui->searchButton, &QPushButton::clicked, this, &PathSearchWidget::doSearch);
@@ -118,7 +118,7 @@ void PathSearchWidget::doSearch() {
                     threadDb.close();
 
                 } else {
-                    timeInfo="You can stay here as long as you want :)";
+                    timeInfo = "You can stay here as long as you want :)";
                 }
 
                 model->appendRow(new QStandardItem(timeInfo));
