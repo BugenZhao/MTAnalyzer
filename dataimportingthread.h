@@ -3,14 +3,19 @@
 
 
 #include <QThread>
-#include "mainwindow.h"
+#include <QDir>
+#include <QMap>
+#include <QRunnable>
 
-class DataImportingThread : public QThread {
+
+class [[deprecated]] DataImportingThread : public QRunnable {
 private:
-    QStringList csvs;
-    MainWindow *mainWindow;
+    QString csv;
+    QDir dataSetDir;
+    QMap<QString, int> fileId;
+
 public:
-    DataImportingThread(QStringList, MainWindow *);
+    DataImportingThread(QString, const QDir&, QMap<QString, int>);
 
     void run() override;
 

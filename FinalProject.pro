@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql
+QT       += core gui sql charts concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -22,21 +22,34 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11
+CONFIG += c++17
 
 SOURCES += \
         dataimportingthread.cpp \
         main.cpp \
         mainwindow.cpp \
-        querywidget.cpp
+        pathsearchwidget.cpp \
+        plotwidget.cpp \
+        preferencesdialog.cpp \
+        querywidget.cpp \
+        utilities/BDateTime.cpp
 
 HEADERS += \
         dataimportingthread.h \
         mainwindow.h \
-        querywidget.h
+        pathsearchwidget.h \
+        plotwidget.h \
+        preferencesdialog.h \
+        querywidget.h \
+        utilities/BDateTime.h \
+        utilities/base.hpp \
+        utilities/hint.hpp
 
 FORMS += \
         mainwindow.ui \
+        pathsearchwidget.ui \
+        plotwidget.ui \
+        preferencesdialog.ui \
         querywidget.ui
 
 # Default rules for deployment.

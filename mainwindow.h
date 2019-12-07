@@ -8,7 +8,11 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include "querywidget.h"
-//#include "dataimportingthread.h"
+#include "pathsearchwidget.h"
+#include "utilities/base.hpp"
+#include "utilities/BDateTime.h"
+#include "plotwidget.h"
+#include "preferencesdialog.h"
 
 
 namespace Ui {
@@ -19,17 +23,17 @@ class MainWindow : public QMainWindow {
 Q_OBJECT
 
 public:
-    using Record=QString;
-
     explicit MainWindow(QWidget *parent = nullptr);
 
-    ~MainWindow();
+    ~MainWindow() override;
 
-    void importDataSet();
+    void preloadDataSets();
 
 signals:
 
     void percentageComplete(int);
+
+    void statusBarMessage(const QString &message, int timeout = 0);
 
 private slots:
 
@@ -41,33 +45,63 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QString TITLE;
+
+    bool enabled = false;
+
+    QString adjacencySubdirName = "adjacency_adjacency";
+    QString dataSetSubdirName = "dataset";
+
     QDir mainDir = QDir();
     QDir dataSetDir = QDir();
     QDir adjacencyDir = QDir();
+    QString adjacencyFilePath;
 
-    QTreeWidgetItem *dataSetItem;
-    QueryWidget *queryWidget;
+    QTreeWidgetItem *importItem = nullptr;
 
-    QVector2D *adj = nullptr;
+    QueryWidget *queryWidget = nullptr;
+    PathSearchWidget *pathSearchWidget = nullptr;
+    QVector<PlotWidget *> plotWidgets{};
+
+    Adj adj;
 
     QSqlDatabase db;
     QHash<int, QVector<Record>> data;
     QMap<QString, int> fileId;
+    QMap<QString, int> dateId;
     QSet<QString> curCsvs;
 
-    const QString timeFormat = "yyyy-MM-dd hh:mm:ss";
+    bool curUserIdChecked = false;
 
-    void setupUi();
+    void setupBzUi();
 
-    void updateFilterWidgetAdjacency();
+    void updateFilterWidgetImportAdjacency(QTreeWidgetItem *parent);
 
-    void updateFilterWidgetDataSet();
+    void updateFilterWidgetImportDataSet(QTreeWidgetItem *parent);
 
-    void updateFilterWidgetOthers(const QStringList &lines, const QStringList &payTypes);
+    void updateFilterWidgetImportFields(QTreeWidgetItem *parent);
 
-    void test();
+    void updateFilterWidgetFiltersFields(const QStringList &payTypes, const QStringList &lines);
 
-    friend class DataImportingThread;
+    [[deprecated]] void importFilteredData();
+
+    void importFilteredDataMt();
+
+    void importAdjacency();
+
+    void importFilteredAll();
+
+    void onPreloadFinished();
+
+    void testPlot();
+
+    PlotWidget *initPlotTab(QWidget *plotTab);
+
+    void addPlotTab();
+
+    void closePlotTab(int index);
+
+    void preferences();
 };
 
 #endif // MAINWINDOW_H
