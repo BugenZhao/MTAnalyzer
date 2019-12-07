@@ -1,4 +1,4 @@
-name: IOS
+name: iOS
 on: 
   push:
     paths-ignore:
