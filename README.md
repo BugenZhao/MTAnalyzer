@@ -6,17 +6,17 @@
 | ![macos-badge]   |![ios-badge]   | ![ubuntu-badge]      | ![win-badge]  |
 
 
-[win-link]: ./actions?query=workflow%3AWindows "WindowsAction"
-[win-badge]: ./workflows/Windows/badge.svg  "Windows"
+[win-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AWindows "WindowsAction"
+[win-badge]: https://github.com/BugenZhao/FinalProject/workflows/Windows/badge.svg  "Windows"
 
-[ubuntu-link]: ./actions?query=workflow%3AUbuntu "UbuntuAction"
-[ubuntu-badge]: ./workflows/Ubuntu/badge.svg "Ubuntu"
+[ubuntu-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AUbuntu "UbuntuAction"
+[ubuntu-badge]: https://github.com/BugenZhao/FinalProject/workflows/Ubuntu/badge.svg "Ubuntu"
 
-[macos-link]: ./actions?query=workflow%3AmacOS "macOSAction"
-[macos-badge]: ./workflows/macOS/badge.svg "macOS"
+[macos-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AmacOS "macOSAction"
+[macos-badge]: https://github.com/BugenZhao/FinalProject/workflows/macOS/badge.svg "macOS"
 
-[ios-link]: ./actions?query=workflow%3AiOS "iOSAction"
-[ios-badge]: ./workflows/iOS/badge.svg "iOS"
+[ios-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AiOS "iOSAction"
+[ios-badge]: https://github.com/BugenZhao/FinalProject/workflows/iOS/badge.svg "iOS"
 
 
 
