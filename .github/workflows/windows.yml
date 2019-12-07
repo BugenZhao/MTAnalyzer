@@ -90,7 +90,7 @@ jobs:
           # 拷贝exe
           Copy-Item bin\${env:targetName} ${env:archiveName}\
           # 拷贝依赖
-          windeployqt --qmldir . ${env:archiveName}\${env:targetName}
+          windeployqt ${env:archiveName}\${env:targetName}
           # 打包zip
           Compress-Archive -Path ${env:archiveName} ${env:archiveName}'.zip'
           # 记录环境变量packageName给后续step
