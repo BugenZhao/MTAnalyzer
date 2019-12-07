@@ -18,7 +18,7 @@ jobs:
         qt_ver: [5.13.2]
         qt_arch: [clang_64]
     env:
-      targetName: HelloActions-Qt
+      targetName: FinalProject
     steps:
       - name: cacheQt
         id: MacosCacheQt
