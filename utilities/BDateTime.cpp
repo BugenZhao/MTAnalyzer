@@ -6,7 +6,8 @@
 
 int BDateTime::bToLocalTimestamp(const QString &s) {
     if (!s.isEmpty()) {
-        std::tm tm{};
+        using namespace std;
+        tm tm{};
 
         tm.tm_year = s.mid(0, 4).toInt() - 1900;
         tm.tm_mon = s.mid(5, 2).toInt() - 1;
@@ -15,7 +16,7 @@ int BDateTime::bToLocalTimestamp(const QString &s) {
         tm.tm_min = s.mid(14, 2).toInt();
         tm.tm_sec = s.mid(17, 2).toInt();
 
-        return std::mktime(&tm);
+        return mktime(&tm);
     }
     return 0;
 }
