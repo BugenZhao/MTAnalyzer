@@ -22,6 +22,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(importAction, &QAction::triggered, this, &MainWindow::preloadDataSets);
     fileMenu->addAction(importAction);
 
+    auto applyAction = new QAction(tr("&Apply Importer && Filters"), this);
+    applyAction->setShortcut(QKeySequence("Ctrl+Return"));
+    applyAction->setEnabled(false);
+    connect(applyAction, &QAction::triggered, ui->filterButton, &QPushButton::click);
+    connect(this, &MainWindow::enabledChanged, applyAction, &QAction::setEnabled);
+    fileMenu->addAction(applyAction);
+
     auto preferencesAction = new QAction(tr("&Preferences"), this);
     preferencesAction->setShortcut(QKeySequence::Preferences);
     connect(preferencesAction, &QAction::triggered, this, &MainWindow::preferences);
@@ -30,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto addPlotTabAction = new QAction(tr("&Add a plot tab"), this);
     addPlotTabAction->setShortcut(QKeySequence::AddTab);
     connect(addPlotTabAction, &QAction::triggered, this, &MainWindow::addPlotTab);
+    connect(this, &MainWindow::enabledChanged, addPlotTabAction, &QAction::setEnabled);
     windowMenu->addAction(addPlotTabAction);
     windowMenu->addSeparator();
 
@@ -41,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     windowMenu->addAction(showDockAction);
 
 
-    connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::importFilteredAll);
+    connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::doImportAndFilterAll);
 
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("file::memory:");
@@ -92,6 +100,10 @@ void MainWindow::setupBzUi() {
     connect(pathSearchWidget, &PathSearchWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
     connect(this, &MainWindow::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
 
+    if (BZ_DEBUG) {
+        ui->filterTree->setHeaderHidden(false);
+        ui->filterTree->setColumnCount(2);
+    }
 }
 
 PlotWidget *MainWindow::initPlotTab(QWidget *plotTab) {
@@ -118,9 +130,13 @@ void MainWindow::addPlotTab() {
 
     auto plotWidget = initPlotTab(plotTab);
     plotWidget->setBzEnabled(enabled);
+
+    plotWidget->setFilterDataList(filterDataList);
+    connect(this, &MainWindow::filterDataListUpdated, plotWidget, &PlotWidget::setFilterDataList);
+
     try {
         if (enabled)
-            plotWidget->setDate(importItem->child(1)->child(0)->text(0));
+            plotWidget->setDate(importerItem->child(1)->child(0)->text(0));
     } catch (...) {}
 
     ui->plotTabs->setCurrentIndex(index);
@@ -145,7 +161,8 @@ void MainWindow::preloadDataSets() {
 
     ui->filterTree->clear();
     curCsvs.clear();
-    enabled = false;
+    setMainEnabled(false);
+
 
     QSqlQuery query;
     qInfo() << query.exec("DROP TABLE bz");
@@ -192,23 +209,24 @@ void MainWindow::preloadDataSets() {
     }
 
 
-    importItem = new QTreeWidgetItem(ui->filterTree);
-    importItem->setText(0, tr("Importer"));
-    importItem->setText(1, tr("IMPORTER"));
-    importItem->setCheckState(0, Qt::Checked);
-    importItem->setFlags(importItem->flags() & (~Qt::ItemIsUserCheckable) | Qt::ItemIsAutoTristate);
-    importItem->setExpanded(true);
+    importerItem = new QTreeWidgetItem(ui->filterTree);
+    importerItem->setText(0, tr("Importer"));
+    importerItem->setText(1, tr("IMPORTER"));
+    importerItem->setCheckState(0, Qt::Checked);
+    importerItem->setFlags(importerItem->flags() & (~Qt::ItemIsUserCheckable) | Qt::ItemIsAutoTristate);
+    importerItem->setExpanded(true);
+
+    updateFilterWidgetImportAdjacency(importerItem);
+    updateFilterWidgetImportDataSet(importerItem);
+    updateFilterWidgetImportFields(importerItem);
 
 
-    updateFilterWidgetImportAdjacency(importItem);
-    updateFilterWidgetImportDataSet(importItem);
-    updateFilterWidgetImportFields(importItem);
     updateFilterWidgetFiltersFields({}, {});
 
     importAdjacency();
 
     for (const auto &plotWidget:plotWidgets) {
-        plotWidget->setDate(importItem->child(1)->child(0)->text(0));
+        plotWidget->setDate(importerItem->child(1)->child(0)->text(0));
     }
 
     onPreloadFinished();
@@ -297,15 +315,14 @@ void MainWindow::updateFilterWidgetImportFields(QTreeWidgetItem *parent) {
 }
 
 void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, const QStringList &lines) {
+    filterItem = new QTreeWidgetItem(ui->filterTree);
+    filterItem->setText(0, tr("Filters for plots"));
+    filterItem->setText(1, "FILTERS");
+    filterItem->setCheckState(0, Qt::Checked);
+    filterItem->setFlags(filterItem->flags() | Qt::ItemIsAutoTristate);
+    filterItem->setExpanded(true);
 
-    auto filtersFields = new QTreeWidgetItem(ui->filterTree);
-    filtersFields->setText(0, tr("Filters for plots"));
-    filtersFields->setText(1, "FILTERS");
-    filtersFields->setCheckState(0, Qt::Checked);
-    filtersFields->setFlags(filtersFields->flags() | Qt::ItemIsAutoTristate);
-    filtersFields->setExpanded(true);
-
-    auto linesItem = new QTreeWidgetItem(filtersFields);
+    auto linesItem = new QTreeWidgetItem(filterItem);
     linesItem->setText(0, tr("Lines"));
     linesItem->setText(1, "LINES");
     linesItem->setCheckState(0, Qt::Checked);
@@ -319,13 +336,13 @@ void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, co
         item->setFlags(item->flags() | Qt::ItemIsAutoTristate);
     }
 
-    auto payTypesItem = new QTreeWidgetItem(filtersFields);
+    auto payTypesItem = new QTreeWidgetItem(filterItem);
     payTypesItem->setText(0, tr("Payment types"));
     payTypesItem->setText(1, "PAY_TYPES");
     payTypesItem->setCheckState(0, Qt::Checked);
     payTypesItem->setFlags(payTypesItem->flags() | Qt::ItemIsAutoTristate);
 
-    for (const auto &s:QStringList{"0", "1", "2"}) {
+    for (const auto &s:QStringList{"0", "1", "2", "3"}) {
         auto item = new QTreeWidgetItem(payTypesItem);
         item->setText(0, s);
         item->setText(1, "PAY_TYPE");
@@ -334,7 +351,8 @@ void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, co
     }
 }
 
-void MainWindow::importFilteredAll() {
+void MainWindow::doImportAndFilterAll() {
+    updateFilterDataList();
     importFilteredDataMt();
 }
 
@@ -342,51 +360,8 @@ void MainWindow::importFilteredDataMt() {
     auto thread = QThread::create([this] {
         auto startTime = QTime::currentTime();
 
-        auto worker = [this](const QString &csv) -> QStringList {
-            auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
-            QFile csvFile(filePath);
-            qInfo() << filePath;
-
-            if (!csvFile.open(QFile::ReadOnly | QFile::Text)) {
-                return {};
-                //TODO
-            }
-
-            QTextStream stream(&csvFile);
-            stream.readLine();
-
-            const QString STRFTIME("STRFTIME('%s', '%1')");
-            QStringList queries;
-
-            while (!stream.atEnd()) {
-                auto line = stream.readLine();
-                auto pieces = line.split(',');
-
-                auto _dateId = dateId[pieces[0].split(' ')[0]];
-                QString userId;
-                if (curUserIdChecked) userId = QString("\"%1\"").arg(pieces[5]);
-                else userId = "NULL";
-
-                QStringList queryPieces;
-                queryPieces << QString::number(fileId[csv])
-                            << QString("'%1'").arg(pieces[0])
-                            << QString("'%1'").arg(pieces[1])
-                            << pieces[2]
-                            << pieces[3]
-                            << pieces[4]
-                            << pieces[6]
-                            << userId
-                            << QString::number(_dateId)
-                            << QString::number(BDateTime::bToLocalTimestamp(pieces[0]));
-
-
-                queries.append(QString("INSERT INTO bz VALUES (%1)").arg(queryPieces.join(", ")));
-            }
-            return queries;
-        };
-
-        auto dataSetItem = importItem->child(1);
-        auto userIdItem = importItem->child(2)->child(0);
+        auto dataSetItem = importerItem->child(1);
+        auto userIdItem = importerItem->child(2)->child(0);
 
         QSet<QString> newCsvs;
         for (int i = 0; i < dataSetItem->childCount(); ++i) {
@@ -446,7 +421,51 @@ void MainWindow::importFilteredDataMt() {
             qInfo() << toDelete;
 
             emit statusBarMessage("Loading data sets concurrently...");
-            auto results = QtConcurrent::blockingMapped(toInsert, std::function<QStringList(const QString &)>(worker));
+
+            auto worker = [this](const QString &csv) -> QStringList {
+                auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
+                QFile csvFile(filePath);
+                qInfo() << filePath;
+
+                if (!csvFile.open(QFile::ReadOnly | QFile::Text)) {
+                    return {};
+                    //TODO
+                }
+
+                QTextStream stream(&csvFile);
+                stream.readLine();
+
+                const QString STRFTIME("STRFTIME('%s', '%1')");
+                QStringList queries;
+
+                while (!stream.atEnd()) {
+                    auto line = stream.readLine();
+                    auto pieces = line.split(',');
+
+                    auto _dateId = dateId[pieces[0].split(' ')[0]];
+                    QString userId;
+                    if (curUserIdChecked) userId = QString("\"%1\"").arg(pieces[5]);
+                    else userId = "NULL";
+
+                    QStringList queryPieces;
+                    queryPieces << QString::number(fileId[csv])
+                                << QString("'%1'").arg(pieces[0])
+                                << QString("'%1'").arg(pieces[1])
+                                << pieces[2]
+                                << pieces[3]
+                                << pieces[4]
+                                << pieces[6]
+                                << userId
+                                << QString::number(_dateId)
+                                << QString::number(BDateTime::bToLocalTimestamp(pieces[0]));
+
+
+                    queries.append(QString("INSERT INTO bz VALUES (%1)").arg(queryPieces.join(", ")));
+                }
+                return queries;
+            };
+            auto insertQueries = QtConcurrent::blockingMapped(toInsert,
+                                                              std::function<QStringList(const QString &)>(worker));
 
             // Delete
             int total = toDelete.size();
@@ -464,11 +483,11 @@ void MainWindow::importFilteredDataMt() {
 
             // Insert
             emit statusBarMessage("Please wait while data sets are processing...");
-            total = results.size();
+            total = insertQueries.size();
             cur = 0;
             QVector<int> perTimesMs;
 
-            for (auto &result:results) {
+            for (auto &result:insertQueries) {
                 auto t0 = QTime::currentTime();
 
                 for (const auto &queryText:result) {
@@ -550,13 +569,13 @@ void MainWindow::onPreloadFinished() {
     for (auto plotWidget:plotWidgets) {
         plotWidget->setBzEnabled(false);
     }
-    emit statusBarMessage("Data set is opened. Use Importer & Filters to load and process them.", 8000);
+    emit statusBarMessage("Data set is opened. Click 'Apply' to load and process them.", 8000);
     setWindowTitle(QString("%1 - %2").arg(TITLE).arg(mainDir.absolutePath()));
-    enabled = true;
+    setMainEnabled(true);
 }
 
 void MainWindow::onImportStarted() {
-    enabled = false;
+    setMainEnabled(false);
     ui->filterButton->setEnabled(false);
     ui->progressBar->setValue(0);
     queryWidget->setBzEnabled(false);
@@ -574,7 +593,7 @@ void MainWindow::onImportFinished() {
     for (auto plotWidget:plotWidgets) {
         plotWidget->setBzEnabled(true);
     }
-    enabled = true;
+    setMainEnabled(true);
 }
 
 void MainWindow::testPlot() {
@@ -589,11 +608,44 @@ void MainWindow::testPlot() {
     plotWidgets[0]->setDateTimeSplineChart(chartData);
 }
 
+void MainWindow::preferences() {
+    auto newPreferences = PreferencesDialog::getPreferences(
+            {adjacencySubdirName, dataSetSubdirName}, !enabled);
+    if (!newPreferences.adjacencySubdirName.isEmpty()) adjacencySubdirName = newPreferences.adjacencySubdirName;
+    if (!newPreferences.dataSetSubdirName.isEmpty()) dataSetSubdirName = newPreferences.dataSetSubdirName;
+}
+
+void MainWindow::setMainEnabled(bool _enabled) {
+    this->enabled = _enabled;
+    emit enabledChanged(_enabled);
+}
+
+void MainWindow::updateFilterDataList() {
+    FilterDataList _filterDataList;
+    for (int i = 0; i < filterItem->childCount(); ++i) {
+        auto filter = filterItem->child(i);
+        FilterData filterData{filter->text(1), QMap<QString, bool>()};
+        for (int j = 0; j < filter->childCount(); ++j) {
+            auto child = filter->child(j);
+            filterData.second.insert(child->text(0), child->checkState(0) == Qt::Checked);
+        }
+        _filterDataList.push_back(filterData);
+    }
+    filterDataList = _filterDataList;
+
+    //
+    emit filterDataListUpdated(filterDataList);
+}
+
+FilterDataList MainWindow::getFilterDataList() {
+    return filterDataList;
+}
+
 
 [[deprecated]] void MainWindow::importFilteredData() {
     QSet<QString> newCsvs;
 
-    auto dataSetItem = importItem->child(1);
+    auto dataSetItem = importerItem->child(1);
 
     for (int i = 0; i < dataSetItem->childCount(); ++i) {
         auto date = dataSetItem->child(i);
@@ -689,11 +741,4 @@ void MainWindow::testPlot() {
     connect(thread, &QThread::finished, [this, newCsvs] { curCsvs = newCsvs; });
 
     thread->start();
-}
-
-void MainWindow::preferences() {
-    auto newPreferences = PreferencesDialog::getPreferences(
-            {adjacencySubdirName, dataSetSubdirName}, !enabled);
-    if (!newPreferences.adjacencySubdirName.isEmpty()) adjacencySubdirName = newPreferences.adjacencySubdirName;
-    if (!newPreferences.dataSetSubdirName.isEmpty()) dataSetSubdirName = newPreferences.dataSetSubdirName;
 }

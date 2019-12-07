@@ -43,6 +43,10 @@ public:
 
     [[deprecated]] void bzClear();
 
+public slots:
+
+    void setFilterDataList(const FilterDataList &_filterDataList);
+
 signals:
 
     void statusBarMessage(QString qString, int i);
@@ -61,6 +65,7 @@ private:
     QList<QSplineSeries *> seriesList{};
     QAbstractAxis *_axisX = nullptr;
     QAbstractAxis *_axisY = nullptr;
+    FilterDataList filterDataList{};
 
 
     [[deprecated]] void analyze();

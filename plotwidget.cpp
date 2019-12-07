@@ -353,6 +353,46 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
 
 void PlotWidget::dynamicAnalyzeBetter() {
     auto thread = QThread::create([this]() {
+        auto _filterDataList = filterDataList;
+        QMap<QString, bool> filterNeeded;
+
+        QStringList filterJudgmentPieces;
+        for (const auto &filterData:_filterDataList) {
+            bool allChecked = true;
+            bool anyChecked = false;
+
+            qInfo() << filterData.second;
+
+            for (bool checked:filterData.second) {
+                allChecked &= checked;
+                anyChecked |= checked;
+            }
+
+            if (!anyChecked) {
+                emit statusBarMessage("Some filters are set incorrectly", 5000);
+                return;
+            }
+            if (allChecked) continue;
+
+            QStringList pieces;
+            if (filterData.first == "LINES") {
+                for (const auto &item:filterData.second.keys()) {
+                    if (filterData.second[item])
+                        pieces.push_back(QString("lineId = '%1'").arg(item));
+                }
+            } else if (filterData.first == "PAY_TYPES") {
+                for (const auto &item:filterData.second.keys()) {
+                    if (filterData.second[item])
+                        pieces.push_back(QString("payType = %1").arg(item));
+                }
+            }
+            filterJudgmentPieces.push_back(QString("( %1 )").arg(pieces.join(" OR ")));
+        }
+
+        auto filterJudgment = filterJudgmentPieces.join(" AND ");
+        qInfo() << filterJudgment;
+
+
         auto startTime = QTime::currentTime();
 
         auto timeStepMinutes = ui->timeStepBox->value();
@@ -373,11 +413,13 @@ void PlotWidget::dynamicAnalyzeBetter() {
 
 
         constexpr int _LENGTH = 15;
-        const QString TITLE = QString("Traffic inflow and outflow trend of Station %1 from %2 %3 to %4")
+        QString TITLE = QString("Traffic inflow and outflow trend of Station %1 from %2 %3 to %4")
                 .arg(stationId)
                 .arg(dateStr)
                 .arg(startingTimeStr)
                 .arg(endingTimeStr);
+
+        if (!filterJudgment.isEmpty()) TITLE += QString("\n where %1").arg(filterJudgment);
 
         QVector<int> timestampsToDo;
         for (auto timestamp = startingTimestamp;
@@ -385,7 +427,7 @@ void PlotWidget::dynamicAnalyzeBetter() {
             timestampsToDo.push_back(timestamp);
         }
 
-        auto worker = [this, stationId, TITLE, _LENGTH, timeStepMinutes](
+        auto worker = [this, stationId, TITLE, _LENGTH, timeStepMinutes, filterJudgment](
                 int curTimestamp) -> QPair<int, QPair<int, int>> {
             auto threadDb = QSqlDatabase::addDatabase(
                     "QSQLITE",
@@ -395,15 +437,19 @@ void PlotWidget::dynamicAnalyzeBetter() {
             threadDb.open();
             QSqlQuery query(threadDb);
 
-            const auto queryStr = QString("SELECT\n"
-                                          "\tcount( * ) \n"
-                                          "FROM\n"
-                                          "\tbz \n"
-                                          "WHERE\n"
-                                          "\ttimestamp > %1 \n"
-                                          "\tAND timestamp < %2 \n"
-                                          "\tAND status = %3 \n"
-                                          "\tAND stationID = ") + stationId;
+            auto queryStr = QString("SELECT\n"
+                                    "\tcount( * ) \n"
+                                    "FROM\n"
+                                    "\tbz \n"
+                                    "WHERE\n"
+                                    "\ttimestamp > %1 \n"
+                                    "\tAND timestamp < %2 \n"
+                                    "\tAND status = %3 \n"
+                                    "\tAND stationID = ") + stationId;
+
+            if (!filterJudgment.isEmpty()) {
+                queryStr += QString(" AND %1").arg(filterJudgment);
+            }
 
             auto curQueryStr = queryStr.arg(curTimestamp).arg(curTimestamp + 60 * timeStepMinutes);
 
@@ -421,6 +467,7 @@ void PlotWidget::dynamicAnalyzeBetter() {
             qInfo() << curTimestamp;
             return {curTimestamp, QPair<int, int>{inflow, outflow}};
         };
+
 
         emit preparedChart({TITLE,
                             QStringList{"Inflow", "Outflow"},
@@ -557,7 +604,10 @@ void PlotWidget::setDate(const QString &pureDateStr) {
         maxY = std::max({maxY, point0.y(), point1.y()});
         dynamic_cast<QValueAxis *>(chart->axes()[1])->setMax(maxY * 11 / 10);
     }
+}
 
-
+void PlotWidget::setFilterDataList(const FilterDataList &_filterDataList) {
+    qInfo() << "filter data updated";
+    this->filterDataList = _filterDataList;
 }
 

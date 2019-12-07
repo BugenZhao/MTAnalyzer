@@ -9,10 +9,15 @@
 #include <QDateTime>
 
 using Adj=QVector<QVector<bool>>;
+
 using Record=QString;
+
 using BData=QPair<QPointF, QString>;
 using BDataList=QList<BData>;
 using BDataTable=QList<BDataList>;
+
+using FilterData=QPair<QString, QMap<QString, bool>>;
+using FilterDataList=QList<FilterData>;
 
 namespace BugenZhao {
     const QString DATE_TIME_FORMAT = "yyyy-MM-dd hh:mm:ss";
@@ -27,6 +32,8 @@ namespace BugenZhao {
         for (const auto &item:sequence) sum += item;
         return sum / sequence.size();
     }
+
+    const bool BZ_DEBUG = false;
 }
 
 

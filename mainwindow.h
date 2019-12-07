@@ -33,7 +33,11 @@ signals:
 
     void percentageComplete(int);
 
-    void statusBarMessage(const QString &message, int timeout = 0);
+    void statusBarMessage(QString message, int timeout = 0);
+
+    void enabledChanged(bool enabled);
+
+    void filterDataListUpdated(FilterDataList _filterDataList);
 
 private slots:
 
@@ -55,9 +59,9 @@ private:
     QDir mainDir = QDir();
     QDir dataSetDir = QDir();
     QDir adjacencyDir = QDir();
-    QString adjacencyFilePath;
 
-    QTreeWidgetItem *importItem = nullptr;
+    QTreeWidgetItem *importerItem = nullptr;
+    QTreeWidgetItem *filterItem = nullptr;
 
     QueryWidget *queryWidget = nullptr;
     PathSearchWidget *pathSearchWidget = nullptr;
@@ -66,10 +70,11 @@ private:
     Adj adj;
 
     QSqlDatabase db;
-    QHash<int, QVector<Record>> data;
     QMap<QString, int> fileId;
     QMap<QString, int> dateId;
     QSet<QString> curCsvs;
+
+    FilterDataList filterDataList;
 
     bool curUserIdChecked = false;
 
@@ -89,7 +94,7 @@ private:
 
     void importAdjacency();
 
-    void importFilteredAll();
+    void doImportAndFilterAll();
 
     void onPreloadFinished();
 
@@ -102,6 +107,12 @@ private:
     void closePlotTab(int index);
 
     void preferences();
+
+    void setMainEnabled(bool _enabled);
+
+    FilterDataList getFilterDataList();
+
+    void updateFilterDataList();
 };
 
 #endif // MAINWINDOW_H
