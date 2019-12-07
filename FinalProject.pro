@@ -30,6 +30,7 @@ SOURCES += \
         mainwindow.cpp \
         pathsearchwidget.cpp \
         plotwidget.cpp \
+        preferencesdialog.cpp \
         querywidget.cpp
 
 HEADERS += \
@@ -37,12 +38,14 @@ HEADERS += \
         mainwindow.h \
         pathsearchwidget.h \
         plotwidget.h \
+        preferencesdialog.h \
         querywidget.h
 
 FORMS += \
         mainwindow.ui \
         pathsearchwidget.ui \
         plotwidget.ui \
+        preferencesdialog.ui \
         querywidget.ui
 
 # Default rules for deployment.

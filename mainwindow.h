@@ -10,7 +10,9 @@
 #include "querywidget.h"
 #include "pathsearchwidget.h"
 #include "utilities/base.hpp"
+#include "utilities/BDateTime.h"
 #include "plotwidget.h"
+#include "preferencesdialog.h"
 
 
 namespace Ui {
@@ -43,6 +45,13 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QString TITLE;
+
+    bool enabled = false;
+
+    QString adjacencySubdirName = "adjacency_adjacency";
+    QString dataSetSubdirName = "dataset";
+
     QDir mainDir = QDir();
     QDir dataSetDir = QDir();
     QDir adjacencyDir = QDir();
@@ -59,6 +68,7 @@ private:
     QSqlDatabase db;
     QHash<int, QVector<Record>> data;
     QMap<QString, int> fileId;
+    QMap<QString, int> dateId;
     QSet<QString> curCsvs;
 
     bool curUserIdChecked = false;
@@ -84,6 +94,14 @@ private:
     void onPreloadFinished();
 
     void testPlot();
+
+    PlotWidget *initPlotTab(QWidget *plotTab);
+
+    void addPlotTab();
+
+    void closePlotTab(int index);
+
+    void preferences();
 };
 
 #endif // MAINWINDOW_H

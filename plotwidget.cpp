@@ -9,6 +9,7 @@
 #include <QtConcurrent>
 #include <QDateTimeAxis>
 #include <QValueAxis>
+#include "utilities/BDateTime.h"
 
 
 PlotWidget::PlotWidget(QWidget *parent) :
@@ -19,8 +20,9 @@ PlotWidget::PlotWidget(QWidget *parent) :
 
 
     ui->setupUi(this);
-    ui->startingTimeEdit->setTime(QTime::fromString("07:00", BugenZhao::TIME_FORMAT_NO_SEC));
-    ui->endingTimeEdit->setTime(QTime::fromString("10:00", BugenZhao::TIME_FORMAT_NO_SEC));
+    ui->startingTimeEdit->setTime(QTime::fromString("05:30", BugenZhao::TIME_FORMAT_NO_SEC));
+    ui->endingTimeEdit->setTime(QTime::fromString("23:30", BugenZhao::TIME_FORMAT_NO_SEC));
+    ui->timeStepBox->setValue(20);
 
     auto layout = new QVBoxLayout(ui->plotBox);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -31,7 +33,7 @@ PlotWidget::PlotWidget(QWidget *parent) :
 
     chartView->setRenderHint(QPainter::Antialiasing);
 
-    connect(ui->analyzeButton, &QPushButton::clicked, this, &PlotWidget::dynamicAnalyze);
+    connect(ui->analyzeButton, &QPushButton::clicked, this, &PlotWidget::dynamicAnalyzeBetter);
 //    connect(this, &PlotWidget::preparedSplineChart, this, &PlotWidget::setDateTimeSplineChart);
 
     connect(this, &PlotWidget::preparedChart, this, &PlotWidget::dynamicInitChart);
@@ -246,7 +248,7 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
     connect(thread, &QThread::finished, this, &PlotWidget::onAnalysisFinished);
 }
 
-void PlotWidget::dynamicAnalyze() {
+[[deprecated]] void PlotWidget::dynamicAnalyzeOldTenMinutes() {
     auto thread = QThread::create([this]() {
         auto startTime = QTime::currentTime();
 
@@ -257,6 +259,7 @@ void PlotWidget::dynamicAnalyze() {
         auto _endingTime = ui->endingTimeEdit->time();
         QDateTime startingDateTime(date, QTime(_startingTime.hour(), _startingTime.minute() / 10 * 10));
         QDateTime endingDateTime(date, QTime(_endingTime.hour(), _endingTime.minute() / 10 * 10));
+
 
         constexpr int _LENGTH = 15;
         const QString TITLE = QString("Traffic inflow and outflow trend of Station %1 from %2 to %3")
@@ -348,6 +351,113 @@ void PlotWidget::dynamicAnalyze() {
     connect(thread, &QThread::finished, this, &PlotWidget::onAnalysisFinished);
 }
 
+void PlotWidget::dynamicAnalyzeBetter() {
+    auto thread = QThread::create([this]() {
+        auto startTime = QTime::currentTime();
+
+        auto timeStepMinutes = ui->timeStepBox->value();
+        auto stationId = ui->stationBox->text();
+
+        auto dateStr = ui->dateEdit->text();
+        auto startingTimeStr = ui->startingTimeEdit->text();
+        auto endingTimeStr = ui->endingTimeEdit->text();
+        qInfo()<<QString("%1 %2").arg(dateStr).arg(startingTimeStr);
+        int startingTimestamp = BDateTime::bToLocalTimestamp(QString("%1 %2").arg(dateStr).arg(startingTimeStr));
+        int endingTimestamp = BDateTime::bToLocalTimestamp(QString("%1 %2").arg(dateStr).arg(endingTimeStr));
+
+        auto date = ui->dateEdit->date();
+        auto _startingTime = ui->startingTimeEdit->time();
+        auto _endingTime = ui->endingTimeEdit->time();
+        QDateTime startingDateTime(date, QTime(_startingTime.hour(), _startingTime.minute() / 10 * 10));
+        QDateTime endingDateTime(date, QTime(_endingTime.hour(), _endingTime.minute() / 10 * 10));
+
+
+        constexpr int _LENGTH = 15;
+        const QString TITLE = QString("Traffic inflow and outflow trend of Station %1 from %2 %3 to %4")
+                .arg(stationId)
+                .arg(dateStr)
+                .arg(startingTimeStr)
+                .arg(endingTimeStr);
+
+        QVector<int> timestampsToDo;
+        for (auto timestamp = startingTimestamp;
+             timestamp <= endingTimestamp; timestamp = timestamp + 60 * timeStepMinutes) {
+            timestampsToDo.push_back(timestamp);
+        }
+
+        auto worker = [this, stationId, TITLE, _LENGTH, timeStepMinutes](
+                int curTimestamp) -> QPair<int, QPair<int, int>> {
+            auto threadDb = QSqlDatabase::addDatabase(
+                    "QSQLITE",
+                    QString("plot_thread_") + QString::number(quintptr(QThread::currentThreadId())));
+            threadDb.setDatabaseName("file::memory:");
+            threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
+            threadDb.open();
+            QSqlQuery query(threadDb);
+
+            const auto queryStr = QString("SELECT\n"
+                                          "\tcount( * ) \n"
+                                          "FROM\n"
+                                          "\tbz \n"
+                                          "WHERE\n"
+                                          "\ttimestamp > %1 \n"
+                                          "\tAND timestamp < %2 \n"
+                                          "\tAND status = %3 \n"
+                                          "\tAND stationID = ") + stationId;
+
+            auto curQueryStr = queryStr.arg(curTimestamp).arg(curTimestamp + 60 * timeStepMinutes);
+
+            if (!query.exec(curQueryStr.arg(1)))
+                qInfo() << query.lastError().text();
+            query.next();
+            auto inflow = query.value(0).toInt();
+
+            if (!query.exec(curQueryStr.arg(0)))
+                qInfo() << query.lastError().text();
+            query.next();
+            auto outflow = query.value(0).toInt();
+
+            threadDb.close();
+            qInfo()<<curTimestamp;
+            return {curTimestamp, QPair{inflow, outflow}};
+        };
+
+        emit preparedChart({TITLE,
+                            QStringList{"Inflow", "Outflow"},
+                            BDataTable{{},
+                                       {}}},
+                           startingDateTime,
+                           endingDateTime);
+
+        BData tmpInflowData;
+        BData tmpOutflowData;
+
+        QList<QPair<int, QPair<int, int>>> results;
+
+        int cur = 0;
+        for (auto timestamp:timestampsToDo) {
+            auto pair = worker(timestamp);
+
+            qInfo() << timestamp * 1000L << pair.second.first;
+
+            tmpInflowData = {QPointF{static_cast<qreal>(timestamp * 1000L),
+                                     static_cast<qreal>(pair.second.first)}, ""};
+            tmpOutflowData = {QPointF{static_cast<qreal>(timestamp * 1000L),
+                                      static_cast<qreal>(pair.second.second)}, ""};
+
+            emit newData(BDataList{tmpInflowData, tmpOutflowData});
+            ++cur;
+        }
+
+        emit statusBarMessage(QString("Done in %1s").arg(startTime.msecsTo(QTime::currentTime()) / 1000.0),
+                              3000);
+    });
+
+    thread->start();
+    connect(thread, &QThread::started, this, &PlotWidget::onAnalysisStarted);
+    connect(thread, &QThread::finished, this, &PlotWidget::onAnalysisFinished);
+}
+
 void PlotWidget::dynamicInitChart(const PlotWidget::BzChartData &chartBaseData,
                                   const QDateTime &dt0, const QDateTime &dt1) {
     auto oldChart = chartView->chart();
@@ -379,6 +489,7 @@ void PlotWidget::dynamicInitChart(const PlotWidget::BzChartData &chartBaseData,
         chart->addSeries(series);
         series->attachAxis(axisX);
         series->attachAxis(axisY);
+        series->setUseOpenGL(true);
 
         seriesList.push_back(series);
     }

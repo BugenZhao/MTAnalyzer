@@ -65,11 +65,13 @@ private:
 
     [[deprecated]] void analyze();
 
-    void dynamicAnalyze();
+    [[deprecated]] void dynamicAnalyzeOldTenMinutes();
 
     void dynamicInitChart(const BzChartData &chartBaseData, const QDateTime &dt0, const QDateTime &dt1);
 
     void dynamicAppendData(const BDataList &dataList);
+
+    void dynamicAnalyzeBetter();
 };
 
 #endif // PLOTWIDGET_H

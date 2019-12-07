@@ -87,24 +87,30 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
         <property name="text">
          <string>Date</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
       <item row="0" column="3">
        <widget class="QSpinBox" name="timeStepBox">
         <property name="suffix">
-         <string>0 minutes</string>
+         <string> minutes</string>
         </property>
         <property name="minimum">
-         <number>1</number>
+         <number>5</number>
         </property>
         <property name="maximum">
-         <number>24</number>
+         <number>240</number>
         </property>
         <property name="singleStep">
-         <number>1</number>
+         <number>10</number>
         </property>
         <property name="stepType">
          <enum>QAbstractSpinBox::DefaultStepType</enum>

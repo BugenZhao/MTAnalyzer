@@ -1,36 +1,49 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "utilities/hint.hpp"
 #include <QtWidgets>
-#include "querywidget.h"
 #include <string>
-#include "dataimportingthread.h"
 #include <QtConcurrent>
 #include <QFuture>
 
 using std::string;
 
 MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent), ui(new Ui::MainWindow),
-          db(QSqlDatabase::addDatabase("QSQLITE")) {
+        : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     setupBzUi();
+    TITLE = windowTitle();
+
+    auto fileMenu = menuBar()->addMenu(tr("&File"));
+    auto windowMenu = menuBar()->addMenu(tr("&Window"));
 
     auto importAction = new QAction(tr("&Open data set folder..."), this);
     importAction->setShortcut(QKeySequence::Open);
-    auto fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(importAction);
     connect(importAction, &QAction::triggered, this, &MainWindow::preloadDataSets);
+    fileMenu->addAction(importAction);
 
-    auto showDockAction = new QAction(tr("&Importer && Filter"), this);
+    auto preferencesAction = new QAction(tr("&Preferences"), this);
+    preferencesAction->setShortcut(QKeySequence::Preferences);
+    connect(preferencesAction, &QAction::triggered, this, &MainWindow::preferences);
+    fileMenu->addAction(preferencesAction);
+
+    auto addPlotTabAction = new QAction(tr("&Add a plot tab"), this);
+    addPlotTabAction->setShortcut(QKeySequence::AddTab);
+    connect(addPlotTabAction, &QAction::triggered, this, &MainWindow::addPlotTab);
+    windowMenu->addAction(addPlotTabAction);
+    windowMenu->addSeparator();
+
+    auto showDockAction = new QAction(tr("&Importer && Filters"), this);
     showDockAction->setShortcut(QKeySequence("Ctrl+I"));
     showDockAction->setCheckable(true);
-    auto windowMenu = menuBar()->addMenu(tr("&Window"));
-    windowMenu->addAction(showDockAction);
     connect(ui->dockWidget, &QDockWidget::visibilityChanged, showDockAction, &QAction::setChecked);
     connect(showDockAction, &QAction::toggled, ui->dockWidget, &QDockWidget::setVisible);
+    windowMenu->addAction(showDockAction);
+
 
     connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::importFilteredAll);
 
+    db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("file::memory:");
     db.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
     db.open();
@@ -44,21 +57,20 @@ void MainWindow::setupBzUi() {
     ui->filterTree->setHeaderLabels({tr("Filters")});
 
     auto tab1Layout = new QVBoxLayout(ui->tab1);
-    tab1Layout->addWidget(ui->plotTabs);
+    tab1Layout->addWidget(ui->hintLabel);
     tab1Layout->setContentsMargins(0, 0, 0, 0);
     ui->tab1->setLayout(tab1Layout);
 
-    plotWidgets.clear();
-    for (int i = 0; i < ui->plotTabs->count(); ++i) {
-        auto plotTab = ui->plotTabs->widget(i);
-        auto plotWidget = new PlotWidget(plotTab);
-        plotWidgets.push_back(plotWidget);
-        auto tabLayout = new QVBoxLayout(plotTab);
-        tabLayout->addWidget(plotWidget);
-        tabLayout->setContentsMargins(12, 0, 12, 0);
-        plotTab->setLayout(tabLayout);
 
-        connect(plotWidget, &PlotWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
+    plotWidgets.clear();
+//    for (int i = 0; i < ui->plotTabs->count(); ++i) {
+//        auto plotTab = ui->plotTabs->widget(i);
+//        initPlotTab(plotTab);
+//    }
+    ui->plotTabs->clear();
+    connect(ui->plotTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlotTab);
+    for (int i = 0; i < 0; ++i) {
+        addPlotTab();
     }
 
     auto tab2Layout = new QVBoxLayout(ui->tab2);
@@ -74,15 +86,66 @@ void MainWindow::setupBzUi() {
     ui->progressBar->setMaximum(100);
     connect(this, &MainWindow::percentageComplete, ui->progressBar, &QProgressBar::setValue);
 
+    ui->hintLabel->setText(BugenZhao::hintRichText);
+
     connect(queryWidget, &QueryWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
     connect(pathSearchWidget, &PathSearchWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
     connect(this, &MainWindow::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
 
 }
 
+PlotWidget *MainWindow::initPlotTab(QWidget *plotTab) {
+    auto plotWidget = new PlotWidget(plotTab);
+    plotWidgets.push_back(plotWidget);
+    auto tabLayout = new QVBoxLayout(plotTab);
+    tabLayout->addWidget(plotWidget);
+    tabLayout->setContentsMargins(12, 0, 12, 0);
+    plotTab->setLayout(tabLayout);
+
+    connect(plotWidget, &PlotWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
+    return plotWidget;
+}
+
+void MainWindow::addPlotTab() {
+    if (ui->plotTabs->count() == 0) {
+        ui->tab1->layout()->removeWidget(ui->hintLabel);
+        ui->tab1->layout()->addWidget(ui->plotTabs);
+        ui->hintLabel->hide();
+    }
+
+    auto plotTab = new QWidget(ui->plotTabs);
+    auto index = ui->plotTabs->addTab(plotTab, QString("Plot %1").arg(plotWidgets.size() + 1));
+
+    auto plotWidget = initPlotTab(plotTab);
+    plotWidget->setBzEnabled(enabled);
+    try {
+        if (enabled)
+            plotWidget->setDate(importItem->child(1)->child(0)->text(0));
+    } catch (...) {}
+
+    ui->plotTabs->setCurrentIndex(index);
+
+}
+
+void MainWindow::closePlotTab(int index) {
+    ui->plotTabs->removeTab(index);
+
+    if (ui->plotTabs->count() == 0) {
+        ui->tab1->layout()->removeWidget(ui->plotTabs);
+        ui->tab1->layout()->addWidget(ui->hintLabel);
+        ui->hintLabel->show();
+    }
+}
+
 void MainWindow::preloadDataSets() {
+    auto dir = QFileDialog::getExistingDirectory(this, tr("Select data set directory"));
+//    auto dir = QString("/Users/bugenzhao/Codes/CLionProjects/FinalProject/dataset_CS241/");
+    if (dir.isEmpty()) { return; }
+
+
     ui->filterTree->clear();
     curCsvs.clear();
+    enabled = false;
 
     QSqlQuery query;
     qInfo() << query.exec("DROP TABLE bz");
@@ -94,27 +157,39 @@ void MainWindow::preloadDataSets() {
                           "  \"deviceID\" integer,\n"
                           "  \"status\" integer,\n"
                           "  \"payType\" integer,\n"
-                          "  \"userID\" text(40)\n"
+                          "  \"userID\" text(40),\n"
+                          "  \"dateID\" integer,\n"
+                          "  \"timestamp\" integer\n"
                           ");");
-    qInfo() << query.exec("\n"
-                          "CREATE INDEX \"userID\"\n"
-                          "ON \"bz\" (\n"
-                          "  \"userID\"\n"
-                          ");");
+//    qInfo() << query.exec("\n"
+//                          "CREATE INDEX \"userID\"\n"
+//                          "ON \"bz\" (\n"
+//                          "  \"userID\"\n"
+//                          ");");
     qInfo() << query.exec("\n"
                           "CREATE INDEX \"file\"\n"
                           "ON \"bz\" (\n"
                           "  \"file\"\n"
                           ");");
+    qInfo() << query.exec("\n"
+                          "CREATE INDEX \"timestamp\"\n"
+                          "ON \"bz\" (\n"
+                          "  \"timestamp\"\n"
+                          ");");
 
-//    auto dir = QFileDialog::getExistingDirectory(this, tr("Select data set directory"));
-    auto dir = QString("/Users/bugenzhao/Codes/CLionProjects/FinalProject/dataset_CS241");
-    if (dir.isEmpty()) { return; }
     mainDir = QDir(dir);
     adjacencyDir = mainDir;
-    adjacencyDir.cd("adjacency_adjacency");
+    bool ok1 = adjacencyDir.cd(adjacencySubdirName);
     dataSetDir = mainDir;
-    dataSetDir.cd("dataset");
+    bool ok2 = dataSetDir.cd(dataSetSubdirName);
+
+    if (!ok1 || !ok2) {
+        emit statusBarMessage(QString("Failed to open data set. "
+                                      "Make sure that subdirectories '%1' and '%2' exist. "
+                                      "You can custom them in Preferences.")
+                                      .arg(adjacencySubdirName).arg(dataSetSubdirName));
+        return;
+    }
 
 
     importItem = new QTreeWidgetItem(ui->filterTree);
@@ -133,7 +208,6 @@ void MainWindow::preloadDataSets() {
     importAdjacency();
 
     for (const auto &plotWidget:plotWidgets) {
-        plotWidget->bzClear();
         plotWidget->setDate(importItem->child(1)->child(0)->text(0));
     }
 
@@ -162,14 +236,20 @@ void MainWindow::updateFilterWidgetImportDataSet(QTreeWidgetItem *parent) {
     auto datesMap = QMap<QString, QVector<QString>>();
 
     auto pattern = QRegExp(R"(\d{4}-\d{2}-\d{2})");
+
     fileId.clear();
+    dateId.clear();
     for (const auto &csv:dataSets) {
 //        qInfo() << csv;
         fileId.insert(csv, fileId.size());
         auto date = csv.split("_")[1];
         if (pattern.exactMatch(date)) {
-            if (!datesMap.contains(date)) datesMap.insert(date, QVector<QString>());
+            if (!datesMap.contains(date))
+                datesMap.insert(date, QVector<QString>());
             datesMap[date].push_back(csv);
+
+            if (!dateId.contains(date))
+                dateId.insert(date, dateId.size());
         }
     }
 
@@ -275,21 +355,30 @@ void MainWindow::importFilteredDataMt() {
             QTextStream stream(&csvFile);
             stream.readLine();
 
+            const QString STRFTIME("STRFTIME('%s', '%1')");
             QStringList queries;
 
             while (!stream.atEnd()) {
                 auto line = stream.readLine();
                 auto pieces = line.split(',');
+
+                auto _dateId = dateId[pieces[0].split(' ')[0]];
+                QString userId;
+                if (curUserIdChecked) userId = QString("\"%1\"").arg(pieces[5]);
+                else userId = "NULL";
+
                 QStringList queryPieces;
                 queryPieces << QString::number(fileId[csv])
-                            << QString("\"%1\"").arg(pieces[0])
-                            << QString("\"%1\"").arg(pieces[1])
+                            << QString("'%1'").arg(pieces[0])
+                            << QString("'%1'").arg(pieces[1])
                             << pieces[2]
                             << pieces[3]
                             << pieces[4]
-                            << pieces[6];
-                if (curUserIdChecked) queryPieces << QString("\"%1\"").arg(pieces[5]);
-                else queryPieces << "NULL";
+                            << pieces[6]
+                            << userId
+                            << QString::number(_dateId)
+                            << QString::number(BDateTime::bToLocalTimestamp(pieces[0]));
+
 
                 queries.append(QString("INSERT INTO bz VALUES (%1)").arg(queryPieces.join(", ")));
             }
@@ -356,7 +445,7 @@ void MainWindow::importFilteredDataMt() {
             qInfo() << toInsert;
             qInfo() << toDelete;
 
-            emit statusBarMessage("Loading data sets...");
+            emit statusBarMessage("Loading data sets concurrently...");
             auto results = QtConcurrent::blockingMapped(toInsert, std::function<QStringList(const QString &)>(worker));
 
             // Delete
@@ -461,9 +550,13 @@ void MainWindow::onPreloadFinished() {
     for (auto plotWidget:plotWidgets) {
         plotWidget->setBzEnabled(false);
     }
+    emit statusBarMessage("Data set is opened. Use Importer & Filters to load and process them.", 8000);
+    setWindowTitle(QString("%1 - %2").arg(TITLE).arg(mainDir.absolutePath()));
+    enabled = true;
 }
 
 void MainWindow::onImportStarted() {
+    enabled = false;
     ui->filterButton->setEnabled(false);
     ui->progressBar->setValue(0);
     queryWidget->setBzEnabled(false);
@@ -481,6 +574,7 @@ void MainWindow::onImportFinished() {
     for (auto plotWidget:plotWidgets) {
         plotWidget->setBzEnabled(true);
     }
+    enabled = true;
 }
 
 void MainWindow::testPlot() {
@@ -595,4 +689,11 @@ void MainWindow::testPlot() {
     connect(thread, &QThread::finished, [this, newCsvs] { curCsvs = newCsvs; });
 
     thread->start();
+}
+
+void MainWindow::preferences() {
+    auto newPreferences = PreferencesDialog::getPreferences(
+            {adjacencySubdirName, dataSetSubdirName}, !enabled);
+    if (!newPreferences.adjacencySubdirName.isEmpty()) adjacencySubdirName = newPreferences.adjacencySubdirName;
+    if (!newPreferences.dataSetSubdirName.isEmpty()) dataSetSubdirName = newPreferences.dataSetSubdirName;
 }

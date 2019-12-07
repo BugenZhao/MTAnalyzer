@@ -6,6 +6,7 @@
 #define FINALPROJECT_BASE_HPP
 
 #include <QVector>
+#include <QDateTime>
 
 using Adj=QVector<QVector<bool>>;
 using Record=QString;

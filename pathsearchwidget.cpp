@@ -16,7 +16,6 @@ PathSearchWidget::PathSearchWidget(Adj *adj, QWidget *parent) :
         ui(new Ui::PathSearchWidget) {
     ui->setupUi(this);
 
-    connect(ui->toEdit, &QLineEdit::returnPressed, this, &PathSearchWidget::doSearch);
     connect(ui->searchButton, &QPushButton::clicked, this, &PathSearchWidget::doSearch);
 
     auto model = new QStandardItemModel(0, 1, this);
@@ -34,10 +33,10 @@ void PathSearchWidget::doSearch() {
     auto model = reinterpret_cast<QStandardItemModel *>(ui->resultTable->model());
     model->clear();
 
-    bool ok1 = false;
-    bool ok2 = false;
-    auto from = ui->fromEdit->text().toInt(&ok1);
-    auto to = ui->toEdit->text().toInt(&ok2);
+    bool ok1 = true;
+    bool ok2 = true;
+    auto from = ui->fromBox->value();
+    auto to = ui->toBox->value();
 
     if (ok1 & ok2) {
         bool ok3 = false;
@@ -57,71 +56,77 @@ void PathSearchWidget::doSearch() {
                 QString timeInfo = "There's no enough information to get the result. \n"
                                    "Make sure you have imported the 'User ID' field, "
                                    "and try to import more data sets.";
+                if (from != to) {
+                    auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "path_thread");
+                    threadDb.setDatabaseName("file::memory:");
+                    threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
+                    threadDb.open();
+                    QSqlQuery query(threadDb);
 
-                auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "path_thread");
-                threadDb.setDatabaseName("file::memory:");
-                threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-                threadDb.open();
-                QSqlQuery query(threadDb);
+                    auto timeOk = query.exec(QString("SELECT\n"
+                                                     "\tbz.userID,\n"
+                                                     "\ttmp.stationID,\n"
+                                                     "\ttmp.time,\n"
+                                                     "\tbz.stationID,\n"
+                                                     "\tbz.time \n"
+                                                     "FROM\n"
+                                                     "\t(\n"
+                                                     "\tSELECT\n"
+                                                     "\t\tuserID,\n"
+                                                     "\t\tstationID,\n"
+                                                     "\t\ttime FROM bz \n"
+                                                     "\tWHERE\n"
+                                                     "\t\t(\n"
+                                                     "\t\t\tstationID = %1 \n"
+                                                     "\t\t\tAND status = 1 \n"
+                                                     "\t\t\tAND payType <> 3 \n"
+                                                     "\t\t) \n"
+                                                     "\t\tLIMIT 20000 \n"
+                                                     "\t) tmp\n"
+                                                     "\tINNER JOIN bz ON tmp.userID = bz.userID \n"
+                                                     "WHERE\n"
+                                                     "\tbz.stationID = %2 \n"
+                                                     "\tAND bz.status = 0 \n"
+                                                     "GROUP BY\n"
+                                                     "\tbz.userID \n"
+                                                     "\tLIMIT 500").arg(from).arg(to));
 
-                auto timeOk = query.exec(QString("SELECT\n"
-                                                 "\tbz.userID,\n"
-                                                 "\ttmp.stationID,\n"
-                                                 "\ttmp.time,\n"
-                                                 "\tbz.stationID,\n"
-                                                 "\tbz.time \n"
-                                                 "FROM\n"
-                                                 "\t(\n"
-                                                 "\tSELECT\n"
-                                                 "\t\tuserID,\n"
-                                                 "\t\tstationID,\n"
-                                                 "\t\ttime FROM bz \n"
-                                                 "\tWHERE\n"
-                                                 "\t\t(\n"
-                                                 "\t\t\tstationID = %1 \n"
-                                                 "\t\t\tAND status = 1 \n"
-                                                 "\t\t\tAND payType <> 3 \n"
-                                                 "\t\t) \n"
-                                                 "\t\tLIMIT 20000 \n"
-                                                 "\t) tmp\n"
-                                                 "\tINNER JOIN bz ON tmp.userID = bz.userID \n"
-                                                 "WHERE\n"
-                                                 "\tbz.stationID = %2 \n"
-                                                 "\tAND bz.status = 0 \n"
-                                                 "GROUP BY\n"
-                                                 "\tbz.userID \n"
-                                                 "\tLIMIT 500").arg(from).arg(to));
+                    if (timeOk) {
+                        auto pathLength = path.split("-").size() - 1;
 
-                if (timeOk) {
-                    auto pathLength = path.split("-").size() - 1;
+                        QVector<qlonglong> minDts;
+                        while (query.next()) {
+                            auto sTime0 = query.value(2).toString();
+                            auto sTime1 = query.value(4).toString();
+                            if (sTime0.split(' ')[0] != sTime1.split(' ')[0]) continue;
 
-                    QVector<qlonglong> minDts;
-                    while (query.next()) {
-                        auto sTime0 = query.value(2).toString();
-                        auto sTime1 = query.value(4).toString();
-                        if (sTime0.split(' ')[0] != sTime1.split(' ')[0]) continue;
+                            auto time0 = QDateTime::fromString(sTime0, BugenZhao::DATE_TIME_FORMAT);
+                            auto time1 = QDateTime::fromString(sTime1, BugenZhao::DATE_TIME_FORMAT);
+                            auto minDt = time0.secsTo(time1) / 60;
 
-                        auto time0 = QDateTime::fromString(sTime0, BugenZhao::DATE_TIME_FORMAT);
-                        auto time1 = QDateTime::fromString(sTime1, BugenZhao::DATE_TIME_FORMAT);
-                        auto minDt = time0.secsTo(time1) / 60;
+                            if (minDt > pathLength * 2 && minDt <= 6 + pathLength * 4 && minDt <= 240) {
+                                minDts.push_back(minDt);
+                                qInfo() << minDt;
+                            }
 
-                        if (minDt > pathLength * 2 && minDt <= 6 + pathLength * 4 && minDt <= 240) {
-                            minDts.push_back(minDt);
-                            qInfo() << minDt;
                         }
+                        if (!minDts.isEmpty()) {
+                            timeInfo = QString("About %1 minutes according to %2 record(s).")
+                                    .arg(BugenZhao::bAverage(minDts)).arg(minDts.size());
+                        }
+                    }
+                    threadDb.close();
 
-                    }
-                    if (!minDts.isEmpty()) {
-                        timeInfo = QString("About %1 minutes according to %2 record(s).")
-                                .arg(BugenZhao::bAverage(minDts)).arg(minDts.size());
-                    }
+                } else {
+                    timeInfo="You can stay here as long as you want :)";
                 }
 
                 model->appendRow(new QStandardItem(timeInfo));
                 model->setVerticalHeaderLabels(QStringList() << "Path" << "Estimated Time");
                 model->setHorizontalHeaderLabels(QStringList() << "Results");
 
-                threadDb.close();
+
+
                 emit statusBarMessage(QString("Done in %1s").arg(startTime.msecsTo(QTime::currentTime()) / 1000.0),
                                       3000);
             });

@@ -11,10 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Metro Traffic Analyzer</string>
+   <string>Metro Traffic Analyzer by Bugen Zhao</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="sizePolicy">
@@ -36,8 +36,8 @@
         </property>
         <property name="geometry">
          <rect>
-          <x>100</x>
-          <y>340</y>
+          <x>200</x>
+          <y>510</y>
           <width>371</width>
           <height>80</height>
          </rect>
@@ -70,13 +70,13 @@
          <enum>Qt::ElideRight</enum>
         </property>
         <property name="usesScrollButtons">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="documentMode">
          <bool>true</bool>
         </property>
         <property name="tabsClosable">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="movable">
          <bool>true</bool>
@@ -95,6 +95,42 @@
          </attribute>
         </widget>
        </widget>
+       <widget class="QLabel" name="hintLabel">
+        <property name="geometry">
+         <rect>
+          <x>260</x>
+          <y>270</y>
+          <width>480</width>
+          <height>171</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot; align=&quot;center&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot;&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘,&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Application&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Preferences...&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘O&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: File&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Open data set folder...&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘T&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Window &lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt;➡️ Add a plot tab&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘I&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Window&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Importer &amp;amp; Filters&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::RichText</enum>
+        </property>
+        <property name="scaledContents">
+         <bool>false</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="indent">
+         <number>-1</number>
+        </property>
+       </widget>
+       <zorder>hintLabel</zorder>
+       <zorder>plotTabs</zorder>
       </widget>
       <widget class="QWidget" name="tab2">
        <attribute name="title">
