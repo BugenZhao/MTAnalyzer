@@ -31,7 +31,8 @@ SOURCES += \
         pathsearchwidget.cpp \
         plotwidget.cpp \
         preferencesdialog.cpp \
-        querywidget.cpp
+        querywidget.cpp \
+        utilities/BDateTime.cpp
 
 HEADERS += \
         dataimportingthread.h \
@@ -39,7 +40,10 @@ HEADERS += \
         pathsearchwidget.h \
         plotwidget.h \
         preferencesdialog.h \
-        querywidget.h
+        querywidget.h \
+        utilities/BDateTime.h \
+        utilities/base.hpp \
+        utilities/hint.hpp
 
 FORMS += \
         mainwindow.ui \
