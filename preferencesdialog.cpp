@@ -22,7 +22,7 @@ void PreferencesDialog::reject() {
 
 PreferencesDialog::Preferences
 PreferencesDialog::getPreferences(const PreferencesDialog::Preferences &current, bool enabled) {
-    auto dialog = PreferencesDialog();
+    PreferencesDialog dialog;
     dialog.ui->subDirGroupBox->setEnabled(enabled);
     dialog.ui->adjEdit->setText(current.adjacencySubdirName);
     dialog.ui->dataSetEdit->setText(current.dataSetSubdirName);

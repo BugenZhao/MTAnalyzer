@@ -149,7 +149,7 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
             auto outflow = query.value(0).toInt();
 
             threadDb.close();
-            return {curDateTime, QPair{inflow, outflow}};
+            return {curDateTime, QPair<int, int>{inflow, outflow}};
         };
 
 //        auto results = QtConcurrent::blockingMapped(
@@ -307,7 +307,7 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
             auto outflow = query.value(0).toInt();
 
             threadDb.close();
-            return {curDateTime, QPair{inflow, outflow}};
+            return {curDateTime, QPair<int, int>{inflow, outflow}};
         };
 
         emit preparedChart({TITLE,
@@ -361,7 +361,7 @@ void PlotWidget::dynamicAnalyzeBetter() {
         auto dateStr = ui->dateEdit->text();
         auto startingTimeStr = ui->startingTimeEdit->text();
         auto endingTimeStr = ui->endingTimeEdit->text();
-        qInfo()<<QString("%1 %2").arg(dateStr).arg(startingTimeStr);
+        qInfo() << QString("%1 %2").arg(dateStr).arg(startingTimeStr);
         int startingTimestamp = BDateTime::bToLocalTimestamp(QString("%1 %2").arg(dateStr).arg(startingTimeStr));
         int endingTimestamp = BDateTime::bToLocalTimestamp(QString("%1 %2").arg(dateStr).arg(endingTimeStr));
 
@@ -418,8 +418,8 @@ void PlotWidget::dynamicAnalyzeBetter() {
             auto outflow = query.value(0).toInt();
 
             threadDb.close();
-            qInfo()<<curTimestamp;
-            return {curTimestamp, QPair{inflow, outflow}};
+            qInfo() << curTimestamp;
+            return {curTimestamp, QPair<int, int>{inflow, outflow}};
         };
 
         emit preparedChart({TITLE,

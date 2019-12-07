@@ -6,9 +6,9 @@
 #include "ui_querywidget.h"
 
 QueryWidget::QueryWidget(QSqlDatabase *pDb, QWidget *parent) :
-        pDb(pDb),
         QWidget(parent),
         ui(new Ui::QueryWidget),
+        pDb(pDb),
         model(new QSqlQueryModel(this)) {
     ui->setupUi(this);
 

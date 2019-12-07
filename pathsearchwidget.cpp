@@ -12,8 +12,8 @@
 
 PathSearchWidget::PathSearchWidget(Adj *adj, QWidget *parent) :
         QWidget(parent),
-        adj(adj),
-        ui(new Ui::PathSearchWidget) {
+        ui(new Ui::PathSearchWidget),
+        adj(adj){
     ui->setupUi(this);
 
     connect(ui->searchButton, &QPushButton::clicked, this, &PathSearchWidget::doSearch);
