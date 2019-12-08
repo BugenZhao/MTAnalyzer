@@ -569,7 +569,7 @@ void MainWindow::onPreloadFinished() {
     for (auto plotWidget:plotWidgets) {
         plotWidget->setBzEnabled(false);
     }
-    emit statusBarMessage("Data set is opened. Click 'Apply' to load and process them.", 8000);
+    emit statusBarMessage("Data set folder is open, click 'Apply' to load and process them.", 8000);
     setWindowTitle(QString("%1 - %2").arg(TITLE).arg(mainDir.absolutePath()));
     setMainEnabled(true);
 }
