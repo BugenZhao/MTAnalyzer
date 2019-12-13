@@ -13,7 +13,7 @@ class QueryWidget : public QWidget {
 Q_OBJECT
 
 public:
-    explicit QueryWidget(QSqlDatabase *pDb, QWidget *parent = nullptr);
+    explicit QueryWidget(QWidget *parent = nullptr);
 
     ~QueryWidget();
 
@@ -25,7 +25,6 @@ signals:
 
 private:
     Ui::QueryWidget *ui;
-    QSqlDatabase *pDb;
     QSqlQueryModel *model;
 
     void doQuery();

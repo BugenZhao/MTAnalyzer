@@ -25,32 +25,44 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++14
 
 SOURCES += \
+        baseplotwidget.cpp \
         dataimportingthread.cpp \
+        flowplotwidget.cpp \
         main.cpp \
         mainwindow.cpp \
         pathsearchwidget.cpp \
         plotwidget.cpp \
         preferencesdialog.cpp \
         querywidget.cpp \
-        utilities/BDateTime.cpp
+        totalflowplotwidget.cpp \
+        totalflowplotwidget.cpp \
+        utilities/BDateTime.cpp \
+        utilities/bdatabasemanager.cpp
 
 HEADERS += \
+        baseplotwidget.h \
         dataimportingthread.h \
+        flowplotwidget.h \
         mainwindow.h \
         pathsearchwidget.h \
         plotwidget.h \
         preferencesdialog.h \
         querywidget.h \
+        totalflowplotwidget.h \
+        totalflowplotwidget.h \
         utilities/BDateTime.h \
         utilities/base.hpp \
+        utilities/bdatabasemanager.h \
         utilities/hint.hpp
 
 FORMS += \
+        flowplotwidget.ui \
         mainwindow.ui \
         pathsearchwidget.ui \
-        plotwidget.ui \
         preferencesdialog.ui \
-        querywidget.ui
+        querywidget.ui \
+        totalflowplotwidget.ui \
+        totalflowplotwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

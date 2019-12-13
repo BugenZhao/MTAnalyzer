@@ -1,5 +1,5 @@
-#include "plotwidget.h"
-#include "ui_plotwidget.h"
+#include "flowplotwidget.h"
+#include "ui_flowplotwidget.h"
 #include <QThread>
 #include <QSqlQuery>
 #include <QTime>
@@ -10,11 +10,12 @@
 #include <QDateTimeAxis>
 #include <QValueAxis>
 #include "utilities/BDateTime.h"
+#include "utilities/bdatabasemanager.h"
 
 
-PlotWidget::PlotWidget(QWidget *parent) :
-        QWidget(parent),
-        ui(new Ui::PlotWidget) {
+FlowPlotWidget::FlowPlotWidget(QWidget *parent) :
+        BasePlotWidget(parent),
+        ui(new Ui::FlowPlotWidget) {
     qRegisterMetaType<BzChartData>("BzChartData");
     qRegisterMetaType<BDataList>("BDataList");
 
@@ -33,23 +34,23 @@ PlotWidget::PlotWidget(QWidget *parent) :
 
     chartView->setRenderHint(QPainter::Antialiasing);
 
-    connect(ui->analyzeButton, &QPushButton::clicked, this, &PlotWidget::dynamicAnalyzeBetter);
-//    connect(this, &PlotWidget::preparedSplineChart, this, &PlotWidget::setDateTimeSplineChart);
+    connect(ui->analyzeButton, &QPushButton::clicked, this, &FlowPlotWidget::dynamicAnalyzeBetter);
+//    connect(this, &FlowPlotWidget::preparedSplineChart, this, &FlowPlotWidget::setDateTimeSplineChart);
 
-    connect(this, &PlotWidget::preparedChart, this, &PlotWidget::dynamicInitChart);
-    connect(this, &PlotWidget::newData, this, &PlotWidget::dynamicAppendData);
+    connect(this, &FlowPlotWidget::preparedChart, this, &FlowPlotWidget::dynamicInitChart);
+    connect(this, &FlowPlotWidget::newData, this, &FlowPlotWidget::dynamicAppendData);
 
 }
 
-PlotWidget::~PlotWidget() {
+FlowPlotWidget::~FlowPlotWidget() {
     delete ui;
 }
 
-void PlotWidget::setBzEnabled(bool enabled) {
+void FlowPlotWidget::setBzEnabled(bool enabled) {
     ui->analyzeButton->setEnabled(enabled);
 }
 
-void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData, bool animated) {
+void FlowPlotWidget::setDateTimeSplineChart(const FlowPlotWidget::BzChartData &chartData, bool animated) {
     auto oldChart = chartView->chart();
     auto chart = new QChart();
 
@@ -91,7 +92,7 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
     delete oldChart;
 }
 
-[[deprecated]] void PlotWidget::analyze() {
+[[deprecated]] void FlowPlotWidget::analyze() {
     auto thread = QThread::create([this]() {
         auto startTime = QTime::currentTime();
 
@@ -117,12 +118,8 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
 
         auto worker = [this, stationId, TITLE, _LENGTH](
                 const QDateTime &curDateTime) -> QPair<QDateTime, QPair<int, int>> {
-            auto threadDb = QSqlDatabase::addDatabase(
-                    "QSQLITE",
+            auto threadDb = BDatabaseManager::connection(
                     QString("plot_thread_") + QString::number(quintptr(QThread::currentThreadId())));
-            threadDb.setDatabaseName("file::memory:");
-            threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-            threadDb.open();
             QSqlQuery query(threadDb);
 
             const auto queryStr = QString("SELECT\n"
@@ -244,11 +241,11 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
 //    });
 
     thread->start();
-    connect(thread, &QThread::started, this, &PlotWidget::onAnalysisStarted);
-    connect(thread, &QThread::finished, this, &PlotWidget::onAnalysisFinished);
+    connect(thread, &QThread::started, this, &FlowPlotWidget::onAnalysisStarted);
+    connect(thread, &QThread::finished, this, &FlowPlotWidget::onAnalysisFinished);
 }
 
-[[deprecated]] void PlotWidget::dynamicAnalyzeOldTenMinutes() {
+[[deprecated]] void FlowPlotWidget::dynamicAnalyzeOldTenMinutes() {
     auto thread = QThread::create([this]() {
         auto startTime = QTime::currentTime();
 
@@ -275,12 +272,8 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
 
         auto worker = [this, stationId, TITLE, _LENGTH](
                 const QDateTime &curDateTime) -> QPair<QDateTime, QPair<int, int>> {
-            auto threadDb = QSqlDatabase::addDatabase(
-                    "QSQLITE",
+            auto threadDb = BDatabaseManager::connection(
                     QString("plot_thread_") + QString::number(quintptr(QThread::currentThreadId())));
-            threadDb.setDatabaseName("file::memory:");
-            threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-            threadDb.open();
             QSqlQuery query(threadDb);
 
             const auto queryStr = QString("SELECT\n"
@@ -347,11 +340,11 @@ void PlotWidget::setDateTimeSplineChart(const PlotWidget::BzChartData &chartData
     });
 
     thread->start();
-    connect(thread, &QThread::started, this, &PlotWidget::onAnalysisStarted);
-    connect(thread, &QThread::finished, this, &PlotWidget::onAnalysisFinished);
+    connect(thread, &QThread::started, this, &FlowPlotWidget::onAnalysisStarted);
+    connect(thread, &QThread::finished, this, &FlowPlotWidget::onAnalysisFinished);
 }
 
-void PlotWidget::dynamicAnalyzeBetter() {
+void FlowPlotWidget::dynamicAnalyzeBetter() {
     auto thread = QThread::create([this]() {
         auto _filterDataList = filterDataList;
         QMap<QString, bool> filterNeeded;
@@ -429,12 +422,8 @@ void PlotWidget::dynamicAnalyzeBetter() {
 
         auto worker = [this, stationId, TITLE, _LENGTH, timeStepMinutes, filterJudgment](
                 int curTimestamp) -> QPair<int, QPair<int, int>> {
-            auto threadDb = QSqlDatabase::addDatabase(
-                    "QSQLITE",
+            auto threadDb = BDatabaseManager::connection(
                     QString("plot_thread_") + QString::number(quintptr(QThread::currentThreadId())));
-            threadDb.setDatabaseName("file::memory:");
-            threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-            threadDb.open();
             QSqlQuery query(threadDb);
 
             auto queryStr = QString("SELECT\n"
@@ -501,12 +490,12 @@ void PlotWidget::dynamicAnalyzeBetter() {
     });
 
     thread->start();
-    connect(thread, &QThread::started, this, &PlotWidget::onAnalysisStarted);
-    connect(thread, &QThread::finished, this, &PlotWidget::onAnalysisFinished);
+    connect(thread, &QThread::started, this, &FlowPlotWidget::onAnalysisStarted);
+    connect(thread, &QThread::finished, this, &FlowPlotWidget::onAnalysisFinished);
 }
 
-void PlotWidget::dynamicInitChart(const PlotWidget::BzChartData &chartBaseData,
-                                  const QDateTime &dt0, const QDateTime &dt1) {
+void FlowPlotWidget::dynamicInitChart(const FlowPlotWidget::BzChartData &chartBaseData,
+                                      const QDateTime &dt0, const QDateTime &dt1) {
     auto oldChart = chartView->chart();
     auto chart = new QChart();
 
@@ -551,7 +540,7 @@ void PlotWidget::dynamicInitChart(const PlotWidget::BzChartData &chartBaseData,
     delete oldChart;
 }
 
-void PlotWidget::dynamicAppendData(const BDataList &dataList) {
+void FlowPlotWidget::dynamicAppendData(const BDataList &dataList) {
     auto axisX = dynamic_cast<QDateTimeAxis *>(_axisX);
     auto axisY = dynamic_cast<QValueAxis *>(_axisY);
 
@@ -570,24 +559,24 @@ void PlotWidget::dynamicAppendData(const BDataList &dataList) {
     axisY->setMax(static_cast<int>( maxY * 11 / 10 + 1));
 }
 
-void PlotWidget::onAnalysisStarted() {
+void FlowPlotWidget::onAnalysisStarted() {
     emit statusBarMessage("Analyzing...", 0);
     ui->analyzeButton->setEnabled(false);
 }
 
-void PlotWidget::onAnalysisFinished() {
+void FlowPlotWidget::onAnalysisFinished() {
     ui->analyzeButton->setEnabled(true);
 }
 
-void PlotWidget::setDate(const QString &pureDateStr) {
+void FlowPlotWidget::setDate(const QString &pureDateStr) {
     ui->dateEdit->setDate(QDate::fromString(pureDateStr, DATE_FORMAT));
 }
 
-[[deprecated]] void PlotWidget::bzClear() {
+[[deprecated]] void FlowPlotWidget::bzClear() {
 //    chartView->close();
 }
 
-[[deprecated]] void PlotWidget::setDynamicDateTimeSplineChart(const PlotWidget::BzChartData &newChartData, bool) {
+[[deprecated]] void FlowPlotWidget::setDynamicDateTimeSplineChart(const FlowPlotWidget::BzChartData &newChartData, bool) {
     if (newChartData.dataTable.isEmpty()) {
         analyzing = false;
         maxY = INT_MIN;
@@ -606,7 +595,7 @@ void PlotWidget::setDate(const QString &pureDateStr) {
     }
 }
 
-void PlotWidget::setFilterDataList(const FilterDataList &_filterDataList) {
+void FlowPlotWidget::setFilterDataList(const FilterDataList &_filterDataList) {
     qInfo() << "filter data updated";
     this->filterDataList = _filterDataList;
 }

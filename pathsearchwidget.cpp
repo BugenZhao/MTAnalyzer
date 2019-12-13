@@ -8,6 +8,7 @@
 #include "pathsearchwidget.h"
 #include "ui_pathsearchwidget.h"
 #include "utilities/base.hpp"
+#include "utilities/bdatabasemanager.h"
 
 
 PathSearchWidget::PathSearchWidget(Adj *adj, QWidget *parent) :
@@ -57,10 +58,7 @@ void PathSearchWidget::doSearch() {
                                    "Make sure you have imported the 'User ID' field, "
                                    "and try to import more data sets.";
                 if (from != to) {
-                    auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "path_thread");
-                    threadDb.setDatabaseName("file::memory:");
-                    threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-                    threadDb.open();
+                    auto threadDb = BDatabaseManager::connection("path_thread");
                     QSqlQuery query(threadDb);
 
                     auto timeOk = query.exec(QString("SELECT\n"

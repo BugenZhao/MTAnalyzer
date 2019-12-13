@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "utilities/hint.hpp"
+#include "utilities/bdatabasemanager.h"
 #include <QtWidgets>
 #include <string>
 #include <QtConcurrent>
@@ -51,10 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->filterButton, &QPushButton::clicked, this, &MainWindow::doImportAndFilterAll);
 
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("file::memory:");
-    db.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-    db.open();
+    db = BDatabaseManager::connection();
 }
 
 MainWindow::~MainWindow() {
@@ -87,7 +85,7 @@ void MainWindow::setupBzUi() {
     ui->tab2->setLayout(tab2Layout);
 
     auto tab3Layout = new QVBoxLayout(ui->tab3);
-    queryWidget = new QueryWidget(&db, this);
+    queryWidget = new QueryWidget(this);
     tab3Layout->addWidget(queryWidget);
     ui->tab3->setLayout(tab3Layout);
 
@@ -106,15 +104,15 @@ void MainWindow::setupBzUi() {
     }
 }
 
-PlotWidget *MainWindow::initPlotTab(QWidget *plotTab) {
-    auto plotWidget = new PlotWidget(plotTab);
+FlowPlotWidget *MainWindow::initPlotTab(QWidget *plotTab) {
+    auto plotWidget = new FlowPlotWidget(plotTab);
     plotWidgets.push_back(plotWidget);
     auto tabLayout = new QVBoxLayout(plotTab);
     tabLayout->addWidget(plotWidget);
     tabLayout->setContentsMargins(12, 0, 12, 0);
     plotTab->setLayout(tabLayout);
 
-    connect(plotWidget, &PlotWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
+    connect(plotWidget, &FlowPlotWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
     return plotWidget;
 }
 
@@ -132,7 +130,7 @@ void MainWindow::addPlotTab() {
     plotWidget->setBzEnabled(enabled);
 
     plotWidget->setFilterDataList(filterDataList);
-    connect(this, &MainWindow::filterDataListUpdated, plotWidget, &PlotWidget::setFilterDataList);
+    connect(this, &MainWindow::filterDataListUpdated, plotWidget, &FlowPlotWidget::setFilterDataList);
 
     try {
         if (enabled)
@@ -183,11 +181,11 @@ void MainWindow::preloadDataSets() {
 //                          "ON \"bz\" (\n"
 //                          "  \"userID\"\n"
 //                          ");");
-    qInfo() << query.exec("\n"
-                          "CREATE INDEX \"file\"\n"
-                          "ON \"bz\" (\n"
-                          "  \"file\"\n"
-                          ");");
+//    qInfo() << query.exec("\n"
+//                          "CREATE INDEX \"file\"\n"
+//                          "ON \"bz\" (\n"
+//                          "  \"file\"\n"
+//                          ");");
     qInfo() << query.exec("\n"
                           "CREATE INDEX \"timestamp\"\n"
                           "ON \"bz\" (\n"
@@ -384,10 +382,7 @@ void MainWindow::importFilteredDataMt() {
             needToClearUserId = true;
         }
 
-        auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "thread");
-        threadDb.setDatabaseName("file::memory:");
-        threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-        threadDb.open();
+        auto threadDb = BDatabaseManager::connection("thread");
         QSqlQuery query(threadDb);
 
 //        qInfo() << threadDb.tables();
@@ -597,7 +592,7 @@ void MainWindow::onImportFinished() {
 }
 
 void MainWindow::testPlot() {
-    PlotWidget::BzChartData chartData;
+    FlowPlotWidget::BzChartData chartData;
     chartData.title = "Test";
     chartData.seriesNames = QStringList() << "Line 1";
     BDataList dataList;
@@ -605,7 +600,7 @@ void MainWindow::testPlot() {
         dataList.append(BData{QPointF{static_cast<qreal>(i), static_cast<qreal>(i * i)}, "Test"});
     }
     chartData.dataTable = QList<BDataList>() << dataList;
-    plotWidgets[0]->setDateTimeSplineChart(chartData);
+//    plotWidgets[0]->setDateTimeSplineChart(chartData);
 }
 
 void MainWindow::preferences() {
@@ -672,10 +667,7 @@ FilterDataList MainWindow::getFilterDataList() {
     auto thread = QThread::create([this, toInsert, toDelete] {
         emit percentageComplete(0);
 
-        auto threadDb = QSqlDatabase::addDatabase("QSQLITE", "thread");
-        threadDb.setDatabaseName("file::memory:");
-        threadDb.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE");
-        threadDb.open();
+        auto threadDb = BDatabaseManager::connection("thread");
         qInfo() << threadDb.tables();
 
         threadDb.transaction();

@@ -4,11 +4,11 @@
 #include <QSqlError>
 #include "querywidget.h"
 #include "ui_querywidget.h"
+#include "utilities/bdatabasemanager.h"
 
-QueryWidget::QueryWidget(QSqlDatabase *pDb, QWidget *parent) :
+QueryWidget::QueryWidget(QWidget *parent) :
         QWidget(parent),
         ui(new Ui::QueryWidget),
-        pDb(pDb),
         model(new QSqlQueryModel(this)) {
     ui->setupUi(this);
 
@@ -23,8 +23,8 @@ QueryWidget::~QueryWidget() {
 
 void QueryWidget::doQuery() {
     ui->queryButton->setEnabled(false);
-
-    model->setQuery(ui->queryInput->toPlainText(), *pDb);
+    auto db = BDatabaseManager::connection("query");
+    model->setQuery(ui->queryInput->toPlainText(), db);
     model->query();
     while (model->canFetchMore()) model->fetchMore();
 

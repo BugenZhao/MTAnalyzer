@@ -11,7 +11,7 @@
 #include "pathsearchwidget.h"
 #include "utilities/base.hpp"
 #include "utilities/BDateTime.h"
-#include "plotwidget.h"
+#include "flowplotwidget.h"
 #include "preferencesdialog.h"
 
 
@@ -65,7 +65,7 @@ private:
 
     QueryWidget *queryWidget = nullptr;
     PathSearchWidget *pathSearchWidget = nullptr;
-    QVector<PlotWidget *> plotWidgets{};
+    QVector<BasePlotWidget *> plotWidgets{};
 
     Adj adj;
 
@@ -100,7 +100,7 @@ private:
 
     void testPlot();
 
-    PlotWidget *initPlotTab(QWidget *plotTab);
+    FlowPlotWidget *initPlotTab(QWidget *plotTab);
 
     void addPlotTab();
 

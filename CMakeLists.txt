@@ -20,8 +20,13 @@ add_executable(FinalProject main.cpp mainwindow.cpp
         dataimportingthread.cpp
         pathsearchwidget.cpp
         utilities/base.hpp
-        plotwidget.cpp
+        flowplotwidget.cpp
         utilities/BDateTime.cpp
-        preferencesdialog.cpp utilities/hint.hpp)
+        preferencesdialog.cpp
+        utilities/hint.hpp
+        utilities/bdatabasemanager.cpp
+        baseplotwidget.cpp
+        totalflowplotwidget.cpp
+        )
 
 target_link_libraries(FinalProject Qt5::Widgets Qt5::Sql Qt5::Concurrent Qt5::Charts)

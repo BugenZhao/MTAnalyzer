@@ -5,7 +5,9 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QSplineSeries>
+#include "ui_flowplotwidget.h"
 #include "utilities/base.hpp"
+#include "baseplotwidget.h"
 
 using namespace QtCharts;
 using namespace BugenZhao;
@@ -14,22 +16,17 @@ namespace Ui {
     class PlotWidget;
 }
 
-class PlotWidget : public QWidget {
+class FlowPlotWidget : public BasePlotWidget {
 Q_OBJECT
 
 
 public:
-    struct BzChartData {
-        QString title;
-        QStringList seriesNames;
-        BDataTable dataTable;
-    };
 
-    explicit PlotWidget(QWidget *parent = nullptr);
+    explicit FlowPlotWidget(QWidget *parent = nullptr);
 
-    ~PlotWidget();
+    ~FlowPlotWidget();
 
-    void setBzEnabled(bool enabled);
+    void setBzEnabled(bool enabled) override;
 
     void setDateTimeSplineChart(const BzChartData &chartData, bool animated = true);
 
@@ -39,7 +36,7 @@ public:
 
     void onAnalysisFinished();
 
-    void setDate(const QString &pureDateStr);
+    void setDate(const QString &pureDateStr) override;
 
     [[deprecated]] void bzClear();
 
@@ -58,7 +55,7 @@ signals:
     void newData(const BDataList &dataList);
 
 private:
-    Ui::PlotWidget *ui;
+    Ui::FlowPlotWidget *ui;
     QChartView *chartView = nullptr;
     bool analyzing = false;
     qreal maxY = 0.0;
