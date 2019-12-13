@@ -16,10 +16,6 @@
 FlowPlotWidget::FlowPlotWidget(QWidget *parent) :
         BasePlotWidget(parent),
         ui(new Ui::FlowPlotWidget) {
-    qRegisterMetaType<BzChartData>("BzChartData");
-    qRegisterMetaType<BDataList>("BDataList");
-
-
     ui->setupUi(this);
     ui->startingTimeEdit->setTime(QTime::fromString("05:30", BugenZhao::TIME_FORMAT_NO_SEC));
     ui->endingTimeEdit->setTime(QTime::fromString("23:30", BugenZhao::TIME_FORMAT_NO_SEC));
@@ -50,7 +46,7 @@ void FlowPlotWidget::setBzEnabled(bool enabled) {
     ui->analyzeButton->setEnabled(enabled);
 }
 
-void FlowPlotWidget::setDateTimeSplineChart(const FlowPlotWidget::BzChartData &chartData, bool animated) {
+[[deprecated]] void FlowPlotWidget::setDateTimeSplineChart(const FlowPlotWidget::BzChartData &chartData, bool animated) {
     auto oldChart = chartView->chart();
     auto chart = new QChart();
 
@@ -595,7 +591,7 @@ void FlowPlotWidget::setDate(const QString &pureDateStr) {
     }
 }
 
-void FlowPlotWidget::setFilterDataList(const FilterDataList &_filterDataList) {
+void FlowPlotWidget::setFilterDataList(FilterDataList _filterDataList) {
     qInfo() << "filter data updated";
     this->filterDataList = _filterDataList;
 }

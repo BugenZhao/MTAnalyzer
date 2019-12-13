@@ -100,9 +100,9 @@ private:
 
     void testPlot();
 
-    FlowPlotWidget *initPlotTab(QWidget *plotTab);
+    BasePlotWidget *initPlotTab(const QString &type, QWidget *plotTab);
 
-    void addPlotTab();
+    void doAddPlotTab(const QString &type);
 
     void closePlotTab(int index);
 
@@ -113,6 +113,10 @@ private:
     FilterDataList getFilterDataList();
 
     void updateFilterDataList();
+
+    void addFlowPlotTab();
+
+    void addTotalFlowPlotTab();
 };
 
 #endif // MAINWINDOW_H

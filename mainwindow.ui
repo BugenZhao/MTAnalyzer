@@ -114,25 +114,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;table border=&quot;0&quot; style=&quot;
-                                        margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot;
-                                        align=&quot;center&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot;&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘,&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;:
-                                        Application&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt;
-                                        ➡️ Preferences...&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘O&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: File&lt;/span&gt;&lt;span
-                                        style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Open data set folder...&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘T&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Window
-                                        &lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt;➡️
-                                        Add a plot tab&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘I&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span
-                                        style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Window&lt;/span&gt;&lt;span
-                                        style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Importer &amp;amp;
-                                        Filters&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;table border=&quot;0&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;&quot; align=&quot;center&quot; cellspacing=&quot;2&quot; cellpadding=&quot;0&quot;&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘,&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Application&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Preferences...&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘O&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: File&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Open data set folder...&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘1&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Window &lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt;➡️ Add tab... &lt;/span&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;➡️&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; Inflow and outflow plot&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;⌘I&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;td&gt;&lt;p&gt;&lt;span style=&quot; font-size:24pt; font-weight:600; color:#6c6c6c;&quot;&gt;: Window&lt;/span&gt;&lt;span style=&quot; font-size:24pt; color:#6c6c6c;&quot;&gt; ➡️ Importer &amp;amp; Filters&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="textFormat">
          <enum>Qt::RichText</enum>

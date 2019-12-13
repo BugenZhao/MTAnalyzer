@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "utilities/hint.hpp"
 #include "utilities/bdatabasemanager.h"
+#include "totalflowplotwidget.h"
 #include <QtWidgets>
 #include <string>
 #include <QtConcurrent>
@@ -35,11 +36,21 @@ MainWindow::MainWindow(QWidget *parent)
     connect(preferencesAction, &QAction::triggered, this, &MainWindow::preferences);
     fileMenu->addAction(preferencesAction);
 
-    auto addPlotTabAction = new QAction(tr("&Add a plot tab"), this);
-    addPlotTabAction->setShortcut(QKeySequence::AddTab);
-    connect(addPlotTabAction, &QAction::triggered, this, &MainWindow::addPlotTab);
-    connect(this, &MainWindow::enabledChanged, addPlotTabAction, &QAction::setEnabled);
-    windowMenu->addAction(addPlotTabAction);
+    auto addTabMenu = windowMenu->addMenu("&Add tab...");
+
+    auto addFlowPlotTabAction = new QAction(tr("Inflow and outflow plot"), this);
+    addFlowPlotTabAction->setShortcut(QKeySequence("Ctrl+1"));
+    connect(addFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addFlowPlotTab);
+    connect(this, &MainWindow::enabledChanged, addFlowPlotTabAction, &QAction::setEnabled);
+    addTabMenu->addAction(addFlowPlotTabAction);
+
+    auto addTotalFlowPlotTabAction = new QAction(tr("Total flow plot"), this);
+    addTotalFlowPlotTabAction->setShortcut(QKeySequence("Ctrl+2"));
+    connect(addTotalFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addTotalFlowPlotTab);
+    connect(this, &MainWindow::enabledChanged, addTotalFlowPlotTabAction, &QAction::setEnabled);
+    addTabMenu->addAction(addTotalFlowPlotTabAction);
+
+
     windowMenu->addSeparator();
 
     auto showDockAction = new QAction(tr("&Importer && Filters"), this);
@@ -75,9 +86,6 @@ void MainWindow::setupBzUi() {
 //    }
     ui->plotTabs->clear();
     connect(ui->plotTabs, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlotTab);
-    for (int i = 0; i < 0; ++i) {
-        addPlotTab();
-    }
 
     auto tab2Layout = new QVBoxLayout(ui->tab2);
     pathSearchWidget = new PathSearchWidget(&adj, this);
@@ -104,19 +112,24 @@ void MainWindow::setupBzUi() {
     }
 }
 
-FlowPlotWidget *MainWindow::initPlotTab(QWidget *plotTab) {
-    auto plotWidget = new FlowPlotWidget(plotTab);
+BasePlotWidget *MainWindow::initPlotTab(const QString &type, QWidget *plotTab) {
+    BasePlotWidget *plotWidget = nullptr;
+    if (type == "FLOW") {
+        plotWidget = new FlowPlotWidget(plotTab);
+    } else if (type == "TOTAL") {
+        plotWidget = new TotalFlowPlotWidget(plotTab);
+    }
     plotWidgets.push_back(plotWidget);
     auto tabLayout = new QVBoxLayout(plotTab);
     tabLayout->addWidget(plotWidget);
     tabLayout->setContentsMargins(12, 0, 12, 0);
     plotTab->setLayout(tabLayout);
 
-    connect(plotWidget, &FlowPlotWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
+    connect(plotWidget, &BasePlotWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
     return plotWidget;
 }
 
-void MainWindow::addPlotTab() {
+void MainWindow::doAddPlotTab(const QString &type) {
     if (ui->plotTabs->count() == 0) {
         ui->tab1->layout()->removeWidget(ui->hintLabel);
         ui->tab1->layout()->addWidget(ui->plotTabs);
@@ -124,13 +137,19 @@ void MainWindow::addPlotTab() {
     }
 
     auto plotTab = new QWidget(ui->plotTabs);
-    auto index = ui->plotTabs->addTab(plotTab, QString("Plot %1").arg(plotWidgets.size() + 1));
+    auto tabName = QString("Plot %1 - %2").arg(plotWidgets.size() + 1);
+    if (type == "FLOW") {
+        tabName = tabName.arg("In/Outflow");
+    } else if (type == "TOTAL") {
+        tabName = tabName.arg("Total Flow");
+    }
+    auto index = ui->plotTabs->addTab(plotTab, tabName);
 
-    auto plotWidget = initPlotTab(plotTab);
+    auto plotWidget = initPlotTab(type, plotTab);
     plotWidget->setBzEnabled(enabled);
 
     plotWidget->setFilterDataList(filterDataList);
-    connect(this, &MainWindow::filterDataListUpdated, plotWidget, &FlowPlotWidget::setFilterDataList);
+    connect(this, &MainWindow::filterDataListUpdated, plotWidget, &BasePlotWidget::setFilterDataList);
 
     try {
         if (enabled)
@@ -138,7 +157,14 @@ void MainWindow::addPlotTab() {
     } catch (...) {}
 
     ui->plotTabs->setCurrentIndex(index);
+}
 
+void MainWindow::addFlowPlotTab() {
+    doAddPlotTab("FLOW");
+}
+
+void MainWindow::addTotalFlowPlotTab() {
+    doAddPlotTab("TOTAL");
 }
 
 void MainWindow::closePlotTab(int index) {

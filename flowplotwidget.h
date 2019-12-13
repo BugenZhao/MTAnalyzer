@@ -13,7 +13,7 @@ using namespace QtCharts;
 using namespace BugenZhao;
 
 namespace Ui {
-    class PlotWidget;
+    class FlowPlotWidget;
 }
 
 class FlowPlotWidget : public BasePlotWidget {
@@ -28,13 +28,13 @@ public:
 
     void setBzEnabled(bool enabled) override;
 
-    void setDateTimeSplineChart(const BzChartData &chartData, bool animated = true);
+    [[deprecated]] void setDateTimeSplineChart(const BzChartData &chartData, bool animated = true);
 
     [[deprecated]] void setDynamicDateTimeSplineChart(const BzChartData &newChartData, bool);
 
-    void onAnalysisStarted();
+    void onAnalysisStarted() override;
 
-    void onAnalysisFinished();
+    void onAnalysisFinished() override;
 
     void setDate(const QString &pureDateStr) override;
 
@@ -42,11 +42,11 @@ public:
 
 public slots:
 
-    void setFilterDataList(const FilterDataList &_filterDataList);
+    void setFilterDataList(FilterDataList _filterDataList) override;
 
 signals:
 
-    void statusBarMessage(QString qString, int i);
+//    void statusBarMessage(QString qString, int i);
 
     void preparedSplineChart(const BzChartData &, bool animated = true);
 
@@ -56,6 +56,8 @@ signals:
 
 private:
     Ui::FlowPlotWidget *ui;
+
+protected:
     QChartView *chartView = nullptr;
     bool analyzing = false;
     qreal maxY = 0.0;

@@ -17,11 +17,19 @@ public:
 
     virtual void setBzEnabled(bool enabled) = 0;
 
+    virtual void onAnalysisStarted() = 0;
+
+    virtual void onAnalysisFinished() = 0;
+
     virtual void setDate(const QString &pureDateStr) = 0;
 
 signals:
 
+    void statusBarMessage(QString qString, int i);
+
 public slots:
+
+    virtual void setFilterDataList(FilterDataList list) = 0;
 };
 
 #endif // BASEPLOTWIDGET_H
