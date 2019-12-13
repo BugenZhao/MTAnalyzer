@@ -31,10 +31,8 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         pathsearchwidget.cpp \
-        plotwidget.cpp \
         preferencesdialog.cpp \
         querywidget.cpp \
-        totalflowplotwidget.cpp \
         totalflowplotwidget.cpp \
         utilities/BDateTime.cpp \
         utilities/bdatabasemanager.cpp
@@ -45,10 +43,8 @@ HEADERS += \
         flowplotwidget.h \
         mainwindow.h \
         pathsearchwidget.h \
-        plotwidget.h \
         preferencesdialog.h \
         querywidget.h \
-        totalflowplotwidget.h \
         totalflowplotwidget.h \
         utilities/BDateTime.h \
         utilities/base.hpp \
@@ -61,7 +57,6 @@ FORMS += \
         pathsearchwidget.ui \
         preferencesdialog.ui \
         querywidget.ui \
-        totalflowplotwidget.ui \
         totalflowplotwidget.ui
 
 # Default rules for deployment.

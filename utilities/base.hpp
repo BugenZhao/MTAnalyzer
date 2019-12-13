@@ -7,6 +7,9 @@
 
 #include <QVector>
 #include <QDateTime>
+#include <QMap>
+#include <QString>
+#include <QPair>
 
 using Adj=QVector<QVector<bool>>;
 
