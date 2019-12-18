@@ -173,6 +173,7 @@ void TotalFlowPlotWidget::dynamicAnalyzeBetter() {
         auto startingTimeStr = ui->startingTimeEdit->text();
         auto endingTimeStr = ui->endingTimeEdit->text();
         qInfo() << QString("%1 %2").arg(dateStr).arg(startingTimeStr);
+        int zeroTimestamp = BDateTime::bToLocalTimestamp(QString("%1 %2").arg(dateStr).arg("00:00"));
         int startingTimestamp = BDateTime::bToLocalTimestamp(QString("%1 %2").arg(dateStr).arg(startingTimeStr));
         int endingTimestamp = BDateTime::bToLocalTimestamp(QString("%1 %2").arg(dateStr).arg(endingTimeStr));
 
@@ -184,15 +185,15 @@ void TotalFlowPlotWidget::dynamicAnalyzeBetter() {
 
 
         constexpr int _LENGTH = 15;
-        QString TITLE = QString("Flow from %1 %2 to %3")
+        QString TITLE = QString("Total Flow From %1 %2 To %3")
                 .arg(dateStr)
                 .arg(startingTimeStr)
                 .arg(endingTimeStr);
 
-        if (!filterJudgment.isEmpty()) TITLE += QString("\n where %1").arg(filterJudgment);
+        if (!filterJudgment.isEmpty()) TITLE += QString("\n Where %1").arg(filterJudgment);
 
         QVector<int> timestampsToDo;
-        for (auto timestamp = startingTimestamp;
+        for (auto timestamp = zeroTimestamp;
              timestamp <= endingTimestamp; timestamp = timestamp + 60 * timeStepMinutes) {
             timestampsToDo.push_back(timestamp);
         }
@@ -248,6 +249,7 @@ void TotalFlowPlotWidget::dynamicAnalyzeBetter() {
         int cur = 0;
         for (auto timestamp:timestampsToDo) {
             auto pair = worker(timestamp);
+            if (timestamp < startingTimestamp) continue;
             QThread::msleep(expectedTimeMs() / timestampsToDo.size());
 
             qInfo() << timestamp * 1000L << pair.second;

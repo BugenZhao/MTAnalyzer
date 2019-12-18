@@ -55,7 +55,7 @@ private:
 
     QString adjacencySubdirName = "adjacency_adjacency";
     QString dataSetSubdirName = "dataset";
-    int speedLevel = FAST;
+    int speedLevel = FASTER;
 
     QDir mainDir = QDir();
     QDir dataSetDir = QDir();
@@ -118,6 +118,8 @@ private:
     void addFlowPlotTab();
 
     void addTotalFlowPlotTab();
+
+    void addWithLineFlowPlotTab();
 };
 
 #endif // MAINWINDOW_H

@@ -54,7 +54,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="speedGroupBox">
      <property name="title">
       <string>Analysis Speed</string>
      </property>

@@ -3,6 +3,7 @@
 #include "utilities/hint.hpp"
 #include "utilities/bdatabasemanager.h"
 #include "totalflowplotwidget.h"
+#include "withlineflowplotwidget.h"
 #include <QtWidgets>
 #include <string>
 #include <QtConcurrent>
@@ -49,6 +50,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addTotalFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addTotalFlowPlotTab);
     connect(this, &MainWindow::enabledChanged, addTotalFlowPlotTabAction, &QAction::setEnabled);
     addTabMenu->addAction(addTotalFlowPlotTabAction);
+
+    auto addWithLineFlowPlotTabAction = new QAction(tr("Inflow plot with lines"), this);
+    addWithLineFlowPlotTabAction->setShortcut(QKeySequence("Ctrl+3"));
+    connect(addWithLineFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addWithLineFlowPlotTab);
+    connect(this, &MainWindow::enabledChanged, addWithLineFlowPlotTabAction, &QAction::setEnabled);
+    addTabMenu->addAction(addWithLineFlowPlotTabAction);
 
 
     windowMenu->addSeparator();
@@ -118,6 +125,8 @@ BasePlotWidget *MainWindow::initPlotTab(const QString &type, QWidget *plotTab) {
         plotWidget = new FlowPlotWidget(plotTab);
     } else if (type == "TOTAL") {
         plotWidget = new TotalFlowPlotWidget(plotTab);
+    } else if (type == "LINE_FLOW") {
+        plotWidget = new WithLineFlowPlotWidget(plotTab);
     }
     plotWidgets.push_back(plotWidget);
     auto tabLayout = new QVBoxLayout(plotTab);
@@ -130,7 +139,8 @@ BasePlotWidget *MainWindow::initPlotTab(const QString &type, QWidget *plotTab) {
 }
 
 void MainWindow::doAddPlotTab(const QString &type) {
-    if (ui->plotTabs->count() == 0) {
+    if (ui->plotTabs->count() == 0)
+    {
         ui->tab1->layout()->removeWidget(ui->hintLabel);
         ui->tab1->layout()->addWidget(ui->plotTabs);
         ui->hintLabel->hide();
@@ -142,6 +152,8 @@ void MainWindow::doAddPlotTab(const QString &type) {
         tabName = tabName.arg("In/Outflow");
     } else if (type == "TOTAL") {
         tabName = tabName.arg("Total Flow");
+    } else if (type == "LINE_FLOW") {
+        tabName = tabName.arg("Flow With Lines");
     }
     auto index = ui->plotTabs->addTab(plotTab, tabName);
 
@@ -166,6 +178,10 @@ void MainWindow::addFlowPlotTab() {
 
 void MainWindow::addTotalFlowPlotTab() {
     doAddPlotTab("TOTAL");
+}
+
+void MainWindow::addWithLineFlowPlotTab() {
+    doAddPlotTab("LINE_FLOW");
 }
 
 void MainWindow::closePlotTab(int index) {
@@ -536,14 +552,21 @@ void MainWindow::importFilteredDataMt() {
             }
 
             // Attempt to create index, if exists then ignored
-            emit statusBarMessage("Creating indexes...");
+            emit statusBarMessage("Creating indices...");
             emit percentageComplete(0);
             qInfo() << query.exec("\n"
                                   "CREATE INDEX \"timestamp\"\n"
                                   "ON \"bz\" (\n"
                                   "  \"timestamp\",\n"
                                   "  \"status\",\n"
-                                  "  \"stationID\"\n"
+                                  "  \"stationID\",\n"
+                                  "  \"lineID\"\n"
+                                  ");");
+            emit percentageComplete(80);
+            qInfo() << query.exec("\n"
+                                  "CREATE INDEX \"file\"\n"
+                                  "ON \"bz\" (\n"
+                                  "  \"file\"\n"
                                   ");");
             emit percentageComplete(100);
         }

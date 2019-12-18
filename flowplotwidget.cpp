@@ -403,13 +403,13 @@ void FlowPlotWidget::dynamicAnalyzeBetter() {
 
 
         constexpr int _LENGTH = 15;
-        QString TITLE = QString("Traffic inflow and outflow trend of Station %1 from %2 %3 to %4")
+        QString TITLE = QString("Traffic Inflow and Outflow Trend of Station %1 From %2 %3 To %4")
                 .arg(stationId)
                 .arg(dateStr)
                 .arg(startingTimeStr)
                 .arg(endingTimeStr);
 
-        if (!filterJudgment.isEmpty()) TITLE += QString("\n where %1").arg(filterJudgment);
+        if (!filterJudgment.isEmpty()) TITLE += QString("\n Where %1").arg(filterJudgment);
 
         QVector<int> timestampsToDo;
         for (auto timestamp = startingTimestamp;
@@ -477,7 +477,7 @@ void FlowPlotWidget::dynamicAnalyzeBetter() {
             tmpInflowData = {QPointF{static_cast<qreal>(timestamp * 1000L),
                                      static_cast<qreal>(pair.second.first)}, ""};
             tmpOutflowData = {QPointF{static_cast<qreal>(timestamp * 1000L),
-                                      static_cast<qreal>(pair.second.second)}, ""};
+                                      static_cast<qreal>(-pair.second.second)}, ""};
 
             emit newData(BDataList{tmpInflowData, tmpOutflowData});
             ++cur;
@@ -550,11 +550,11 @@ void FlowPlotWidget::dynamicAppendData(const BDataList &dataList) {
 //        series->replace(points);
         series->append(point);
 //        QApplication::processEvents();
-        maxY = (point.y() > maxY) ? point.y() : maxY;
+        maxY = (abs(point.y()) > maxY) ? abs(point.y()) : maxY;
     }
 
-    axisY->setMin(0.0);
     axisY->setMax(static_cast<int>( maxY * 11 / 10 + 1));
+    axisY->setMin(-axisY->max());
 }
 
 void FlowPlotWidget::onAnalysisStarted() {

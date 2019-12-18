@@ -27,6 +27,7 @@ add_executable(FinalProject main.cpp mainwindow.cpp
         utilities/bdatabasemanager.cpp
         baseplotwidget.cpp
         totalflowplotwidget.cpp
+        withlineflowplotwidget.cpp
         )
 
 target_link_libraries(FinalProject Qt5::Widgets Qt5::Sql Qt5::Concurrent Qt5::Charts)
