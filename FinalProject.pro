@@ -35,7 +35,8 @@ SOURCES += \
         querywidget.cpp \
         totalflowplotwidget.cpp \
         utilities/BDateTime.cpp \
-        utilities/bdatabasemanager.cpp
+        utilities/bdatabasemanager.cpp \
+        withlineflowplotwidget.cpp
 
 HEADERS += \
         baseplotwidget.h \
@@ -49,7 +50,8 @@ HEADERS += \
         utilities/BDateTime.h \
         utilities/base.hpp \
         utilities/bdatabasemanager.h \
-        utilities/hint.hpp
+        utilities/hint.hpp \
+		withlineflowplotwidget.h
 
 FORMS += \
         flowplotwidget.ui \
@@ -57,7 +59,8 @@ FORMS += \
         pathsearchwidget.ui \
         preferencesdialog.ui \
         querywidget.ui \
-        totalflowplotwidget.ui
+        totalflowplotwidget.ui \
+        withlineflowplotwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
