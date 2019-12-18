@@ -79,6 +79,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::setupBzUi() {
     ui->filterTree->setHeaderLabels({tr("Filters")});
+    ui->filterTree->setAnimated(true);
 
     auto tab1Layout = new QVBoxLayout(ui->tab1);
     tab1Layout->addWidget(ui->hintLabel);
