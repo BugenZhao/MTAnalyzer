@@ -443,8 +443,9 @@ void MainWindow::importFilteredDataMt() {
             qInfo() << toDelete;
 
             emit statusBarMessage("Loading data sets concurrently...");
+            const QString QUERY("INSERT INTO bz VALUES (%1)");
 
-            auto worker = [this](const QString &csv) -> QVector<QString> {
+            auto worker = [this, QUERY](const QString &csv) -> QVector<QString> {
                 auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
                 QFile csvFile(filePath);
                 qInfo() << filePath;
@@ -483,7 +484,7 @@ void MainWindow::importFilteredDataMt() {
                                 << QString::number(BDateTime::bToLocalTimestamp(pieces[0]));
 
 
-                    queries.append(QString("INSERT INTO bz VALUES (%1)").arg(queryPieces.join(", ")));
+                    queries.append(QUERY.arg(queryPieces.join(", ")));
                 }
                 return queries;
             };
@@ -514,8 +515,7 @@ void MainWindow::importFilteredDataMt() {
                 auto t0 = QTime::currentTime();
 
                 for (const auto &queryText:result) {
-                    if (!query.exec(queryText))
-                        qInfo() << query.lastError().text();
+                    query.exec(queryText);
                 }
                 result.clear();
 
