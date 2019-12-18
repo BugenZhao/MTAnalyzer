@@ -12,7 +12,9 @@ PreferencesDialog::~PreferencesDialog() {
 }
 
 void PreferencesDialog::accept() {
-    data = {ui->adjEdit->text(), ui->dataSetEdit->text()};
+    data = {ui->adjEdit->text(),
+            ui->dataSetEdit->text(),
+            ui->speedSlider->value()};
     QDialog::accept();
 }
 
@@ -26,6 +28,8 @@ PreferencesDialog::getPreferences(const PreferencesDialog::Preferences &current,
     dialog.ui->subDirGroupBox->setEnabled(enabled);
     dialog.ui->adjEdit->setText(current.adjacencySubdirName);
     dialog.ui->dataSetEdit->setText(current.dataSetSubdirName);
+    dialog.ui->speedSlider->setValue(current.speedLevel);
+    dialog.data = current;
     dialog.exec();
     return dialog.data;
 }

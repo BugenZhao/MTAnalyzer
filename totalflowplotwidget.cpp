@@ -248,6 +248,7 @@ void TotalFlowPlotWidget::dynamicAnalyzeBetter() {
         int cur = 0;
         for (auto timestamp:timestampsToDo) {
             auto pair = worker(timestamp);
+            QThread::msleep(expectedTimeMs() / timestampsToDo.size());
 
             qInfo() << timestamp * 1000L << pair.second;
 

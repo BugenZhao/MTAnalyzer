@@ -37,6 +37,10 @@ namespace BugenZhao {
     }
 
     const bool BZ_DEBUG = false;
+
+    static const int FAST = 0;
+    static const int FASTER = 1;
+    static const int FASTEST = 2;
 }
 
 

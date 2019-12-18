@@ -17,6 +17,8 @@ public:
 
     virtual void setBzEnabled(bool enabled) = 0;
 
+    virtual void setSpeed(int _speedLevel);
+
     virtual void onAnalysisStarted() = 0;
 
     virtual void onAnalysisFinished() = 0;
@@ -30,6 +32,11 @@ signals:
 public slots:
 
     virtual void setFilterDataList(FilterDataList list) = 0;
+
+protected:
+    int speedLevel;
+
+    virtual int expectedTimeMs();
 };
 
 #endif // BASEPLOTWIDGET_H

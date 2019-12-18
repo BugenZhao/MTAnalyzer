@@ -14,6 +14,7 @@ public:
     struct Preferences {
         QString adjacencySubdirName;
         QString dataSetSubdirName;
+        int speedLevel;
     };
 
     explicit PreferencesDialog(QWidget *parent = nullptr);

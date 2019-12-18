@@ -55,6 +55,7 @@ private:
 
     QString adjacencySubdirName = "adjacency_adjacency";
     QString dataSetSubdirName = "dataset";
+    int speedLevel = FAST;
 
     QDir mainDir = QDir();
     QDir dataSetDir = QDir();

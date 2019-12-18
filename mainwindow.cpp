@@ -147,6 +147,7 @@ void MainWindow::doAddPlotTab(const QString &type) {
 
     auto plotWidget = initPlotTab(type, plotTab);
     plotWidget->setBzEnabled(enabled);
+    plotWidget->setSpeed(speedLevel);
 
     plotWidget->setFilterDataList(filterDataList);
     connect(this, &MainWindow::filterDataListUpdated, plotWidget, &BasePlotWidget::setFilterDataList);
@@ -212,11 +213,11 @@ void MainWindow::preloadDataSets() {
 //                          "ON \"bz\" (\n"
 //                          "  \"file\"\n"
 //                          ");");
-    qInfo() << query.exec("\n"
-                          "CREATE INDEX \"timestamp\"\n"
-                          "ON \"bz\" (\n"
-                          "  \"timestamp\"\n"
-                          ");");
+//    qInfo() << query.exec("\n"
+//                          "CREATE INDEX \"timestamp\"\n"
+//                          "ON \"bz\" (\n"
+//                          "  \"timestamp\"\n"
+//                          ");");
 
     mainDir = QDir(dir);
     adjacencyDir = mainDir;
@@ -443,7 +444,7 @@ void MainWindow::importFilteredDataMt() {
 
             emit statusBarMessage("Loading data sets concurrently...");
 
-            auto worker = [this](const QString &csv) -> QStringList {
+            auto worker = [this](const QString &csv) -> QVector<QString> {
                 auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
                 QFile csvFile(filePath);
                 qInfo() << filePath;
@@ -457,7 +458,8 @@ void MainWindow::importFilteredDataMt() {
                 stream.readLine();
 
                 const QString STRFTIME("STRFTIME('%s', '%1')");
-                QStringList queries;
+                QVector<QString> queries;
+                queries.reserve(80000);
 
                 while (!stream.atEnd()) {
                     auto line = stream.readLine();
@@ -486,7 +488,7 @@ void MainWindow::importFilteredDataMt() {
                 return queries;
             };
             auto insertQueries = QtConcurrent::blockingMapped(toInsert,
-                                                              std::function<QStringList(const QString &)>(worker));
+                                                              std::function<QVector<QString>(const QString &)>(worker));
 
             // Delete
             int total = toDelete.size();
@@ -532,6 +534,18 @@ void MainWindow::importFilteredDataMt() {
                     qInfo() << query.lastError().text();
                 emit percentageComplete(100);
             }
+
+            // Attempt to create index, if exists then ignored
+            emit statusBarMessage("Creating indexes...");
+            emit percentageComplete(0);
+            qInfo() << query.exec("\n"
+                                  "CREATE INDEX \"timestamp\"\n"
+                                  "ON \"bz\" (\n"
+                                  "  \"timestamp\",\n"
+                                  "  \"status\",\n"
+                                  "  \"stationID\"\n"
+                                  ");");
+            emit percentageComplete(100);
         }
 
         threadDb.commit();
@@ -631,9 +645,16 @@ void MainWindow::testPlot() {
 
 void MainWindow::preferences() {
     auto newPreferences = PreferencesDialog::getPreferences(
-            {adjacencySubdirName, dataSetSubdirName}, !enabled);
+            {adjacencySubdirName,
+             dataSetSubdirName,
+             speedLevel}, !enabled);
     if (!newPreferences.adjacencySubdirName.isEmpty()) adjacencySubdirName = newPreferences.adjacencySubdirName;
     if (!newPreferences.dataSetSubdirName.isEmpty()) dataSetSubdirName = newPreferences.dataSetSubdirName;
+    speedLevel = newPreferences.speedLevel;
+
+    for (auto plotWidget:plotWidgets) {
+        plotWidget->setSpeed(speedLevel);
+    }
 }
 
 void MainWindow::setMainEnabled(bool _enabled) {

@@ -46,7 +46,8 @@ void FlowPlotWidget::setBzEnabled(bool enabled) {
     ui->analyzeButton->setEnabled(enabled);
 }
 
-[[deprecated]] void FlowPlotWidget::setDateTimeSplineChart(const FlowPlotWidget::BzChartData &chartData, bool animated) {
+[[deprecated]] void
+FlowPlotWidget::setDateTimeSplineChart(const FlowPlotWidget::BzChartData &chartData, bool animated) {
     auto oldChart = chartView->chart();
     auto chart = new QChart();
 
@@ -469,6 +470,7 @@ void FlowPlotWidget::dynamicAnalyzeBetter() {
         int cur = 0;
         for (auto timestamp:timestampsToDo) {
             auto pair = worker(timestamp);
+            QThread::msleep(expectedTimeMs() / timestampsToDo.size());
 
             qInfo() << timestamp * 1000L << pair.second.first;
 
@@ -572,7 +574,8 @@ void FlowPlotWidget::setDate(const QString &pureDateStr) {
 //    chartView->close();
 }
 
-[[deprecated]] void FlowPlotWidget::setDynamicDateTimeSplineChart(const FlowPlotWidget::BzChartData &newChartData, bool) {
+[[deprecated]] void
+FlowPlotWidget::setDynamicDateTimeSplineChart(const FlowPlotWidget::BzChartData &newChartData, bool) {
     if (newChartData.dataTable.isEmpty()) {
         analyzing = false;
         maxY = INT_MIN;
