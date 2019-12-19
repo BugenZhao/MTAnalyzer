@@ -28,6 +28,12 @@ private:
     QSqlQueryModel *model;
 
     void doQuery();
+
+    void setQueryText(const QString &text);
+
+    void onQueryStarted();
+
+    void onQueryFinished();
 };
 
 #endif // QUERYWIDGET_H

@@ -9,9 +9,7 @@ Q_OBJECT
 public:
     explicit BDatabaseManager(QObject *parent = nullptr);
     static QSqlDatabase connection(const QString& connectionName = QLatin1String(QSqlDatabase::defaultConnection));
-signals:
-
-public slots:
+    static QSqlDatabase readOnlyConnection(const QString &connectionName = QLatin1String(QSqlDatabase::defaultConnection));
 };
 
 #endif // BDATABASEMANAGER_H

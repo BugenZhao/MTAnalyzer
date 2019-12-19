@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto fileMenu = menuBar()->addMenu(tr("&File"));
     auto windowMenu = menuBar()->addMenu(tr("&Window"));
 
-    auto importAction = new QAction(tr("&Open data set folder..."), this);
+    auto importAction = new QAction(tr("&Open Data Set Folder..."), this);
     importAction->setShortcut(QKeySequence::Open);
     connect(importAction, &QAction::triggered, this, &MainWindow::preloadDataSets);
     fileMenu->addAction(importAction);
@@ -37,28 +37,26 @@ MainWindow::MainWindow(QWidget *parent)
     connect(preferencesAction, &QAction::triggered, this, &MainWindow::preferences);
     fileMenu->addAction(preferencesAction);
 
-    auto addTabMenu = windowMenu->addMenu("&Add tab...");
+    fileMenu->addSeparator();
+    auto addTabMenu = fileMenu->addMenu("&Add Tab...");
 
-    auto addFlowPlotTabAction = new QAction(tr("Inflow and outflow plot"), this);
+    auto addFlowPlotTabAction = new QAction(tr("Inflow and Outflow Plot"), this);
     addFlowPlotTabAction->setShortcut(QKeySequence("Ctrl+1"));
     connect(addFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addFlowPlotTab);
     connect(this, &MainWindow::enabledChanged, addFlowPlotTabAction, &QAction::setEnabled);
     addTabMenu->addAction(addFlowPlotTabAction);
 
-    auto addTotalFlowPlotTabAction = new QAction(tr("Total flow plot"), this);
+    auto addTotalFlowPlotTabAction = new QAction(tr("Total Flow Plot"), this);
     addTotalFlowPlotTabAction->setShortcut(QKeySequence("Ctrl+2"));
     connect(addTotalFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addTotalFlowPlotTab);
     connect(this, &MainWindow::enabledChanged, addTotalFlowPlotTabAction, &QAction::setEnabled);
     addTabMenu->addAction(addTotalFlowPlotTabAction);
 
-    auto addWithLineFlowPlotTabAction = new QAction(tr("Inflow plot with lines"), this);
+    auto addWithLineFlowPlotTabAction = new QAction(tr("Inflow Plot with Lines"), this);
     addWithLineFlowPlotTabAction->setShortcut(QKeySequence("Ctrl+3"));
     connect(addWithLineFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addWithLineFlowPlotTab);
     connect(this, &MainWindow::enabledChanged, addWithLineFlowPlotTabAction, &QAction::setEnabled);
     addTabMenu->addAction(addWithLineFlowPlotTabAction);
-
-
-    windowMenu->addSeparator();
 
     auto showDockAction = new QAction(tr("&Importer && Filters"), this);
     showDockAction->setShortcut(QKeySequence("Ctrl+I"));
@@ -154,7 +152,7 @@ void MainWindow::doAddPlotTab(const QString &type) {
     } else if (type == "TOTAL") {
         tabName = tabName.arg("Total Flow");
     } else if (type == "LINE_FLOW") {
-        tabName = tabName.arg("Flow With Lines");
+        tabName = tabName.arg("Flow with Lines");
     }
     auto index = ui->plotTabs->addTab(plotTab, tabName);
 
@@ -358,7 +356,7 @@ void MainWindow::updateFilterWidgetImportFields(QTreeWidgetItem *parent) {
 
 void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, const QStringList &lines) {
     filterItem = new QTreeWidgetItem(ui->filterTree);
-    filterItem->setText(0, tr("Filters for plots"));
+    filterItem->setText(0, tr("Filters for Plots"));
     filterItem->setText(1, "FILTERS");
     filterItem->setCheckState(0, Qt::Checked);
     filterItem->setFlags(filterItem->flags() | Qt::ItemIsAutoTristate);
@@ -379,7 +377,7 @@ void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, co
     }
 
     auto payTypesItem = new QTreeWidgetItem(filterItem);
-    payTypesItem->setText(0, tr("Payment types"));
+    payTypesItem->setText(0, tr("Payment Types"));
     payTypesItem->setText(1, "PAY_TYPES");
     payTypesItem->setCheckState(0, Qt::Checked);
     payTypesItem->setFlags(payTypesItem->flags() | Qt::ItemIsAutoTristate);
@@ -545,7 +543,7 @@ void MainWindow::importFilteredDataMt() {
 
             // Clear userId [optional]
             if (needToClearUserId) {
-                emit statusBarMessage("Clearing User ID...");
+                emit statusBarMessage("Clearing userID...");
                 emit percentageComplete(0);
                 if (!query.exec("UPDATE bz SET userId = NULL"))
                     qInfo() << query.lastError().text();
@@ -556,7 +554,7 @@ void MainWindow::importFilteredDataMt() {
             emit statusBarMessage("Creating indices...");
             emit percentageComplete(0);
             qInfo() << query.exec("\n"
-                                  "CREATE INDEX \"timestamp\"\n"
+                                  "CREATE INDEX \"main_index\"\n"
                                   "ON \"bz\" (\n"
                                   "  \"timestamp\",\n"
                                   "  \"status\",\n"
@@ -564,11 +562,17 @@ void MainWindow::importFilteredDataMt() {
                                   "  \"lineID\"\n"
                                   ");");
             emit percentageComplete(80);
-            qInfo() << query.exec("\n"
-                                  "CREATE INDEX \"file\"\n"
-                                  "ON \"bz\" (\n"
-                                  "  \"file\"\n"
-                                  ");");
+//            qInfo() << query.exec("\n"
+//                                  "CREATE INDEX \"file\"\n"
+//                                  "ON \"bz\" (\n"
+//                                  "  \"file\"\n"
+//                                  ");");
+//            emit percentageComplete(90);
+//            qInfo() << query.exec("\n"
+//                                  "CREATE INDEX \"stationID\"\n"
+//                                  "ON \"bz\" (\n"
+//                                  "  \"stationID\"\n"
+//                                  ");");
             emit percentageComplete(100);
         }
 

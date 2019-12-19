@@ -139,7 +139,7 @@
       </widget>
       <widget class="QWidget" name="tab3">
        <attribute name="title">
-        <string>Database</string>
+        <string>AnyExplore</string>
        </attribute>
       </widget>
      </widget>

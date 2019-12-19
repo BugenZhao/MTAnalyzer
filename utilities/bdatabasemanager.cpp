@@ -10,3 +10,11 @@ QSqlDatabase BDatabaseManager::connection(const QString &connectionName) {
     db.open();
     return db;
 }
+
+QSqlDatabase BDatabaseManager::readOnlyConnection(const QString &connectionName) {
+    auto db = QSqlDatabase::addDatabase("QSQLITE", connectionName);
+    db.setDatabaseName("file::memory:");
+    db.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE;QSQLITE_OPEN_READONLY");
+    db.open();
+    return db;
+}
