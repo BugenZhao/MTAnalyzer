@@ -135,7 +135,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Time step</string>
+         <string>Time stepTimestamp</string>
         </property>
        </widget>
       </item>

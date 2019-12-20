@@ -120,6 +120,8 @@ private:
     void addTotalFlowPlotTab();
 
     void addWithLineFlowPlotTab();
+
+    void addStationFlowPlotTab();
 };
 
 #endif // MAINWINDOW_H

@@ -24,7 +24,7 @@ FlowPlotWidget::FlowPlotWidget(QWidget *parent) :
     auto layout = new QVBoxLayout(ui->plotBox);
     layout->setContentsMargins(0, 0, 0, 0);
     chartView = new QChartView(ui->plotBox);
-//    chartView->setContentsMargins(0, 0, 0, 0);
+//    chartViewLeft->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(chartView);
     ui->plotBox->setLayout(layout);
 
@@ -497,7 +497,10 @@ void FlowPlotWidget::dynamicInitChart(const FlowPlotWidget::BzChartData &chartBa
     auto oldChart = chartView->chart();
     auto chart = new QChart();
 
-    chart->setAnimationOptions(QChart::SeriesAnimations);
+    if (speedLevel == FASTEST)
+        chart->setAnimationOptions(QChart::NoAnimation);
+    else
+        chart->setAnimationOptions(QChart::SeriesAnimations);
 
     _axisX = new QDateTimeAxis(chart);
     auto axisX = dynamic_cast<QDateTimeAxis *>(_axisX);
@@ -571,7 +574,7 @@ void FlowPlotWidget::setDate(const QString &pureDateStr) {
 }
 
 [[deprecated]] void FlowPlotWidget::bzClear() {
-//    chartView->close();
+//    chartViewLeft->close();
 }
 
 [[deprecated]] void

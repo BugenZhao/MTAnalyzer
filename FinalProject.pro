@@ -23,6 +23,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 CONFIG += c++14
+QMAKE_CXXFLAGS_RELEASE += -O3
 
 SOURCES += \
         baseplotwidget.cpp \
@@ -36,7 +37,8 @@ SOURCES += \
         totalflowplotwidget.cpp \
         utilities/BDateTime.cpp \
         utilities/bdatabasemanager.cpp \
-        withlineflowplotwidget.cpp
+        withlineflowplotwidget.cpp \
+        stationflowplotwidget.cpp
 
 HEADERS += \
         baseplotwidget.h \
@@ -51,7 +53,8 @@ HEADERS += \
         utilities/base.hpp \
         utilities/bdatabasemanager.h \
         utilities/hint.hpp \
-		withlineflowplotwidget.h
+		withlineflowplotwidget.h \
+		stationflowplotwidget.h
 
 FORMS += \
         flowplotwidget.ui \
@@ -60,7 +63,8 @@ FORMS += \
         preferencesdialog.ui \
         querywidget.ui \
         totalflowplotwidget.ui \
-        withlineflowplotwidget.ui
+        withlineflowplotwidget.ui \
+        stationflowplotwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

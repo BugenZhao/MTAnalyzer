@@ -63,7 +63,10 @@ void TotalFlowPlotWidget::dynamicInitChart(const BasePlotWidget::BzChartData &ch
     auto oldChart = chartView->chart();
     auto chart = new QChart();
 
-    chart->setAnimationOptions(QChart::SeriesAnimations);
+    if (speedLevel == FASTEST)
+        chart->setAnimationOptions(QChart::NoAnimation);
+    else
+        chart->setAnimationOptions(QChart::SeriesAnimations);
 
     _axisX = new QDateTimeAxis(chart);
     auto axisX = dynamic_cast<QDateTimeAxis *>(_axisX);

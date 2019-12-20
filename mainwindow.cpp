@@ -4,6 +4,7 @@
 #include "utilities/bdatabasemanager.h"
 #include "totalflowplotwidget.h"
 #include "withlineflowplotwidget.h"
+#include "stationflowplotwidget.h"
 #include <QtWidgets>
 #include <string>
 #include <QtConcurrent>
@@ -57,6 +58,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(addWithLineFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addWithLineFlowPlotTab);
     connect(this, &MainWindow::enabledChanged, addWithLineFlowPlotTabAction, &QAction::setEnabled);
     addTabMenu->addAction(addWithLineFlowPlotTabAction);
+
+    auto addStationFlowPlotTabAction = new QAction(tr("Station Flow Plot"), this);
+    addStationFlowPlotTabAction->setShortcut(QKeySequence("Ctrl+4"));
+    connect(addStationFlowPlotTabAction, &QAction::triggered, this, &MainWindow::addStationFlowPlotTab);
+    connect(this, &MainWindow::enabledChanged, addStationFlowPlotTabAction, &QAction::setEnabled);
+    addTabMenu->addAction(addStationFlowPlotTabAction);
 
     auto showDockAction = new QAction(tr("&Importer && Filters"), this);
     showDockAction->setShortcut(QKeySequence("Ctrl+I"));
@@ -126,6 +133,8 @@ BasePlotWidget *MainWindow::initPlotTab(const QString &type, QWidget *plotTab) {
         plotWidget = new TotalFlowPlotWidget(plotTab);
     } else if (type == "LINE_FLOW") {
         plotWidget = new WithLineFlowPlotWidget(plotTab);
+    } else if (type == "STATION") {
+        plotWidget = new StationFlowPlotWidget(plotTab);
     }
     plotWidgets.push_back(plotWidget);
     auto tabLayout = new QVBoxLayout(plotTab);
@@ -138,11 +147,15 @@ BasePlotWidget *MainWindow::initPlotTab(const QString &type, QWidget *plotTab) {
 }
 
 void MainWindow::doAddPlotTab(const QString &type) {
-    if (ui->plotTabs->count() == 0)
-    {
+    if (ui->plotTabs->count() == 0) {
         ui->tab1->layout()->removeWidget(ui->hintLabel);
         ui->tab1->layout()->addWidget(ui->plotTabs);
         ui->hintLabel->hide();
+        if (speedLevel != FASTEST)
+                emit statusBarMessage("To get real(best) performance of the SQL-based plot analysis, "
+                                      "please go to Preferences and set the speed to 'Fastest', "
+                                      "which will turn off all animations",
+                                      15000);
     }
 
     auto plotTab = new QWidget(ui->plotTabs);
@@ -153,6 +166,8 @@ void MainWindow::doAddPlotTab(const QString &type) {
         tabName = tabName.arg("Total Flow");
     } else if (type == "LINE_FLOW") {
         tabName = tabName.arg("Flow with Lines");
+    } else if (type == "STATION") {
+        tabName = tabName.arg("Station Flow");
     }
     auto index = ui->plotTabs->addTab(plotTab, tabName);
 
@@ -181,6 +196,10 @@ void MainWindow::addTotalFlowPlotTab() {
 
 void MainWindow::addWithLineFlowPlotTab() {
     doAddPlotTab("LINE_FLOW");
+}
+
+void MainWindow::addStationFlowPlotTab() {
+    doAddPlotTab("STATION");
 }
 
 void MainWindow::closePlotTab(int index) {
