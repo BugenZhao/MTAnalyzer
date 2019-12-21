@@ -33,6 +33,12 @@ your own Qt `cmake` path.
 #### - Using `qmake`:
 - In terminal, run `qmake` and `make`.
 
+#### - Using Qt Creator:
+- Open `FinalProject.pro`.
+- Configure the project.
+- Build and run.
+
+
 ### Run
 - Execute `./FinalProject` on Unix or directly run `FinalProject.exe` on Windows.
 
