@@ -18,7 +18,6 @@ find_package(Qt5Charts REQUIRED)
 
 add_executable(FinalProject main.cpp mainwindow.cpp
         querywidget.cpp
-        dataimportingthread.cpp
         pathsearchwidget.cpp
         utilities/base.hpp
         flowplotwidget.cpp

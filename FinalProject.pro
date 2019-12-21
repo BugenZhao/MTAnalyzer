@@ -27,7 +27,6 @@ QMAKE_CXXFLAGS_RELEASE += -O3
 
 SOURCES += \
         baseplotwidget.cpp \
-        dataimportingthread.cpp \
         flowplotwidget.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -42,7 +41,6 @@ SOURCES += \
 
 HEADERS += \
         baseplotwidget.h \
-        dataimportingthread.h \
         flowplotwidget.h \
         mainwindow.h \
         pathsearchwidget.h \
