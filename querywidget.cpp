@@ -47,7 +47,7 @@ void QueryWidget::doQuery() {
 
     auto thread = QThread::create([this, queryText]() {
         auto db = BDatabaseManager::readOnlyConnection("query_thread");
-        model->clear();
+        model->removeRows(0, model->rowCount());
         model->setQuery(queryText, db);
         model->query();
         while (model->canFetchMore()) model->fetchMore();
@@ -77,7 +77,6 @@ void QueryWidget::onQueryStarted() {
 }
 
 void QueryWidget::setBzEnabled(bool enabled) {
-    if (!enabled) model->clear();
     ui->queryButton->setEnabled(enabled);
 }
 
