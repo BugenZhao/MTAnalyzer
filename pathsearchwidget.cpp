@@ -57,6 +57,8 @@ void PathSearchWidget::doSearch() {
                 QString timeInfo = "There's no enough information to get the result. \n"
                                    "Make sure you have imported the 'User ID' field, "
                                    "and try to import more data sets.";
+                QVector<QString> details;
+
                 if (from != to) {
                     auto threadDb = BDatabaseManager::connection("path_thread");
                     QSqlQuery query(threadDb);
@@ -89,6 +91,7 @@ void PathSearchWidget::doSearch() {
                                                      "\tbz.userID \n"
                                                      "\tLIMIT 500").arg(from).arg(to));
 
+
                     if (timeOk) {
                         auto pathLength = path.split("-").size() - 1;
 
@@ -104,6 +107,7 @@ void PathSearchWidget::doSearch() {
 
                             if (minDt > pathLength * 2 && minDt <= 6 + pathLength * 4 && minDt <= 240) {
                                 minDts.push_back(minDt);
+                                details.push_back(QString("%1 - %2").arg(sTime0).arg(sTime1));
                                 qInfo() << minDt;
                             }
 
@@ -121,6 +125,18 @@ void PathSearchWidget::doSearch() {
 
                 model->appendRow(new QStandardItem(timeInfo));
                 model->setVerticalHeaderLabels(QStringList() << "Path" << "Estimated Time");
+
+                std::sort(details.begin(), details.end());
+                for (const auto &detail:details) model->appendRow(new QStandardItem(detail));
+                if (!details.isEmpty()) {
+                    auto labels = QStringList() << "Path" << "Estimated Time" << "Details";
+                    for (int i = 2; i <= details.size(); ++i) {
+                        labels << QString::number(i);
+                    }
+                    model->setVerticalHeaderLabels(labels);
+                }
+
+
                 model->setHorizontalHeaderLabels(QStringList() << "Results");
 
 

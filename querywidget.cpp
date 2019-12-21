@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QSqlError>
 #include <QStringListModel>
+#include <QException>
 #include "querywidget.h"
 #include "ui_querywidget.h"
 #include "utilities/bdatabasemanager.h"
@@ -14,13 +15,18 @@ QueryWidget::QueryWidget(QWidget *parent) :
     ui->setupUi(this);
     ui->examplesComboBox->setCurrentText("Examples...");
     auto examples = QStringList() << "Examples"
-                                  << "SELECT count(*) FROM bz"
-                                  << "SELECT * FROM bz LIMIT 1000"
-                                  << "SELECT stationID, count(*) flow FROM bz GROUP BY stationID ORDER BY flow DESC";
+                                  << "Total Count => SELECT count(*) FROM bz"
+                                  << "Inspect Table => SELECT * FROM bz LIMIT 1000"
+                                  << "Flow of Station => SELECT stationID, count(*) flow FROM bz GROUP BY stationID ORDER BY flow DESC";
     auto examplesModel = new QStringListModel(examples);
     ui->examplesComboBox->setModel(examplesModel);
     connect(ui->examplesComboBox, &QComboBox::currentTextChanged,
             this, &QueryWidget::setQueryText);
+
+    ui->queryInput->setPlaceholderText(
+            "AnyExplore supports any standard SQL statements to explore the entire database. "
+            "Default table name is 'bz'.\n"
+            "Please see the examples on the right.");
 
     ui->resultTable->setModel(model);
 
@@ -35,12 +41,13 @@ void QueryWidget::doQuery() {
     auto queryText = ui->queryInput->toPlainText();
 
     if (!queryText.toUpper().startsWith("SELECT")) {
-        emit statusBarMessage("Sorry, the database is read-only", 3000);
+        emit statusBarMessage("Sorry, the database is select-only", 3000);
         return;
     }
 
     auto thread = QThread::create([this, queryText]() {
         auto db = BDatabaseManager::readOnlyConnection("query_thread");
+        model->clear();
         model->setQuery(queryText, db);
         model->query();
         while (model->canFetchMore()) model->fetchMore();
@@ -60,11 +67,13 @@ void QueryWidget::doQuery() {
 void QueryWidget::onQueryFinished() {
     ui->resultTable->resizeColumnsToContents();
     ui->queryButton->setEnabled(true);
+    ui->resultTable->setEnabled(true);
 }
 
 void QueryWidget::onQueryStarted() {
     emit statusBarMessage("Querying...");
     ui->queryButton->setEnabled(false);
+    ui->resultTable->setEnabled(false);
 }
 
 void QueryWidget::setBzEnabled(bool enabled) {
@@ -74,6 +83,8 @@ void QueryWidget::setBzEnabled(bool enabled) {
 
 void QueryWidget::setQueryText(const QString &text) {
     if (text.startsWith("Example")) return;
-    ui->queryInput->setPlainText(text);
-    ui->examplesComboBox->setCurrentIndex(0);
+    try {
+        ui->queryInput->setPlainText(text.split(" => ")[1]);
+        ui->examplesComboBox->setCurrentIndex(0);
+    } catch (QException &) {}
 }

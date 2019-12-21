@@ -188,7 +188,7 @@ void TotalFlowPlotWidget::dynamicAnalyzeBetter() {
 
 
         constexpr int _LENGTH = 15;
-        QString TITLE = QString("Total Flow From %1 %2 To %3")
+        QString TITLE = QString("Total Flow from %1 %2 to %3")
                 .arg(dateStr)
                 .arg(startingTimeStr)
                 .arg(endingTimeStr);

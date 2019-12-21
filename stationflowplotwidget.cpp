@@ -143,10 +143,12 @@ void StationFlowPlotWidget::chart(QString title, PieData flows) {
 
     for (int i = 0; i < DETAILED_COUNT_OUT; ++i) {
         auto value = flows.second.second[i].second;
-        auto label = QString("S%1: %2").arg(flows.second.second[i].first).arg(value);
+        auto station = flows.second.second[i].first;
+        auto label = QString("S%1: %2").arg(station).arg(value);
         auto slice = new QPieSlice(label, value);
         if (i == 0) slice->setExploded(true);
-        *outflowSeries << slice;
+//        slice->setColor(QColor::fromHsl(station.toInt() * 360 / 81, 200, 200));
+        * outflowSeries << slice;
     }
     if (DETAILED_COUNT_OUT < flows.second.second.size()) {
         sum = 0;

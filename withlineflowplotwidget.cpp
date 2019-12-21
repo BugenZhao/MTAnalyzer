@@ -111,7 +111,7 @@ void WithLineFlowPlotWidget::dynamicAnalyzeBetter() {
         QDateTime endingDateTime(date, QTime(_endingTime.hour(), _endingTime.minute() / 10 * 10));
 
 
-        QString TITLE = QString("Traffic Inflow Trend With Lines From %1 %2 To %3")
+        QString TITLE = QString("Traffic Inflow Trend with Lines from %1 %2 to %3")
                 .arg(dateStr)
                 .arg(startingTimeStr)
                 .arg(endingTimeStr);

@@ -403,7 +403,7 @@ void FlowPlotWidget::dynamicAnalyzeBetter() {
 
 
         constexpr int _LENGTH = 15;
-        QString TITLE = QString("Traffic Inflow and Outflow Trend of Station %1 From %2 %3 To %4")
+        QString TITLE = QString("Traffic Inflow and Outflow Trend of Station %1 from %2 %3 to %4")
                 .arg(stationId)
                 .arg(dateStr)
                 .arg(startingTimeStr)

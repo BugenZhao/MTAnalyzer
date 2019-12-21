@@ -78,9 +78,6 @@
             <height>60</height>
            </size>
           </property>
-          <property name="placeholderText">
-           <string>AnyExplore supports any stardard SQL statements to explore the entire database</string>
-          </property>
          </widget>
         </item>
         <item row="1" column="2">
