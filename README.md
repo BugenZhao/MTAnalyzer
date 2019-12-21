@@ -1,4 +1,4 @@
-# CS241 Final Project
+# CS241 Final Project - Metro Traffic Analyzer
 
 ## Status
 |[macOS][macos-link]|[iOS][ios-link]| [Ubuntu][ubuntu-link]| [Windows][win-link]|
@@ -19,6 +19,25 @@
 [ios-badge]: https://github.com/BugenZhao/FinalProject/workflows/iOS/badge.svg "iOS"
 
 
+## Introductions
+Please see [REPORT.md][report-md-link].
 
-### BugenZhao, SJTU, Dec 2019.
+## Build and Run
+### Build
+First of all, make sure you have installed Qt on the computer and the version is higher than `5.13`.
+#### -  Using `cmake`:
+- Modify `set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /path/to/your/qt/5.x.x/xxx_64/lib/cmake)` in `CMakeLists.txt` to 
+your own Qt `cmake` path.
+- In terminal, run `cmake .` and `make`.
 
+#### - Using `qmake`:
+- In terminal, run `qmake` and `make`.
+
+### Run
+- Execute `./FinalProject` on Unix or directly run `FinalProject.exe` on Windows.
+
+## Copyright
+BugenZhao, SJTU, Dec 2019.
+
+
+[report-md-link]: REPORT.md "REPORT.md"
