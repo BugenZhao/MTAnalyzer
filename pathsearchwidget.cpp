@@ -113,20 +113,20 @@ void PathSearchWidget::doSearch() {
 
                         }
 
-                        int averageDt = BugenZhao::bAverage(minDts);
-                        auto curTime = ui->timeEdit->time();
-                        for (int i = 0; i <= pathLength; ++i) {
-                            auto timeStr = curTime.addSecs(averageDt * 60 * i / pathLength).toString(
-                                    BugenZhao::TIME_FORMAT_NO_SEC);
-                            if (i == 0)
-                                details.push_back({timeStr, QString("Depart from Station %1").arg(stations[i])});
-                            else if (i == pathLength)
-                                details.push_back({timeStr, QString("Arrive at Station %1").arg(stations[i])});
-                            else
-                                details.push_back({timeStr, QString("At Station %1").arg(stations[i])});
-                        }
 
                         if (!minDts.isEmpty()) {
+                            int averageDt = BugenZhao::bAverage(minDts);
+                            auto curTime = ui->timeEdit->time();
+                            for (int i = 0; i <= pathLength; ++i) {
+                                auto timeStr = curTime.addSecs(averageDt * 60 * i / pathLength).toString(
+                                        BugenZhao::TIME_FORMAT_NO_SEC);
+                                if (i == 0)
+                                    details.push_back({timeStr, QString("Depart from Station %1").arg(stations[i])});
+                                else if (i == pathLength)
+                                    details.push_back({timeStr, QString("Arrive at Station %1").arg(stations[i])});
+                                else
+                                    details.push_back({timeStr, QString("At Station %1").arg(stations[i])});
+                            }
                             timeInfo = QString("About %1 minutes according to %2 record(s).")
                                     .arg(averageDt).arg(minDts.size());
                         }
