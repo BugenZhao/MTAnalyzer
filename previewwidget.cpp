@@ -13,6 +13,7 @@ PreviewWidget::PreviewWidget(QWidget *parent) :
         model(new QSqlQueryModel(this)) {
     ui->setupUi(this);
     ui->resultTable->setModel(model);
+    connect(this, &PreviewWidget::count, this, &PreviewWidget::newTitle);
 }
 
 PreviewWidget::~PreviewWidget() {
@@ -21,14 +22,20 @@ PreviewWidget::~PreviewWidget() {
 
 void PreviewWidget::onQueryFinished() {
     ui->resultTable->resizeColumnsToContents();
-    ui->resultTable->setEnabled(true);
+//    ui->resultTable->setEnabled(true);
 }
 
 void PreviewWidget::onQueryStarted() {
-    ui->resultTable->setEnabled(false);
+//    ui->resultTable->setEnabled(false);
 }
 
 void PreviewWidget::setBzEnabled(bool enabled) {
+}
+
+void PreviewWidget::release() {
+    model->clear();
+    model = new QSqlQueryModel(this);
+    ui->resultTable->setModel(model);
 }
 
 void PreviewWidget::updateBz(const QString &sqlText) {
@@ -38,9 +45,13 @@ void PreviewWidget::updateBz(const QString &sqlText) {
 
     auto thread = QThread::create([this, queryText]() {
         auto db = BDatabaseManager::readOnlyConnection("preview_thread");
+        QSqlQuery countQuery(db);
+        countQuery.exec("SELECT count(*) FROM bz");
+        countQuery.next();
+        emit count(countQuery.value(0).toInt());
         model->setQuery(queryText, db);
         model->query();
-        while (model->canFetchMore()) model->fetchMore();
+//        while (model->canFetchMore()) model->fetchMore();
 
         if (model->lastError().type() == QSqlError::NoError) {
             emit statusBarMessage("Done", 3000);
@@ -53,4 +64,9 @@ void PreviewWidget::updateBz(const QString &sqlText) {
     connect(thread, &QThread::started, this, &PreviewWidget::onQueryStarted);
     connect(thread, &QThread::finished, this, &PreviewWidget::onQueryFinished);
     thread->start();
+}
+
+
+void PreviewWidget::newTitle(int _count) {
+    ui->groupBox_2->setTitle(QString("All %1 Records").arg(_count));
 }

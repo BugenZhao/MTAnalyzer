@@ -474,6 +474,7 @@ void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, co
 }
 
 void MainWindow::doImportAndFilterAll() {
+    previewWidget->release();
     importFilteredDataMt();
 //  updateFilterDataList();
 //  Now in onImportFinished()
@@ -499,7 +500,7 @@ void MainWindow::importFilteredDataMt() {
         }
         qInfo() << newFields;
 
-        previewSqlText = QString("SELECT %1 FROM bz LIMIT 1000").arg(sqlFields.join(", "));
+        previewSqlText = QString("SELECT %1 FROM bz").arg(sqlFields.join(", "));
         qInfo() << previewSqlText;
 
         QSet<QString> newCsvs;

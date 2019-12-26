@@ -34,7 +34,7 @@
      <item>
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
-        <string>The First 1,000 Records</string>
+        <string>All Records</string>
        </property>
        <property name="flat">
         <bool>true</bool>

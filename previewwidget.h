@@ -21,9 +21,13 @@ public:
 
     void updateBz(const QString &sqlText);
 
+    void release();
+
 signals:
 
     void statusBarMessage(const QString &message, int timeout = 0);
+
+    void count(int _count);
 
 private:
     Ui::PreviewWidget *ui;
@@ -32,6 +36,8 @@ private:
     void onQueryStarted();
 
     void onQueryFinished();
+
+    void newTitle(int _count);
 };
 
 #endif // PREVIEWWIDGET_H
