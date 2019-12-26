@@ -5,6 +5,7 @@
 #include "totalflowplotwidget.h"
 #include "withlineflowplotwidget.h"
 #include "stationflowplotwidget.h"
+#include "previewwidget.h"
 #include <QtWidgets>
 #include <string>
 #include <QtConcurrent>
@@ -110,6 +111,11 @@ void MainWindow::setupBzUi() {
     tab3Layout->addWidget(queryWidget);
     ui->tab3->setLayout(tab3Layout);
 
+    auto tabPreviewLayout = new QVBoxLayout(ui->tabPreview);
+    previewWidget = new PreviewWidget(this);
+    tabPreviewLayout->addWidget(previewWidget);
+    ui->tabPreview->setLayout(tabPreviewLayout);
+
     ui->progressBar->setMaximum(100);
     connect(this, &MainWindow::percentageComplete, ui->progressBar, &QProgressBar::setValue);
 
@@ -118,6 +124,8 @@ void MainWindow::setupBzUi() {
     connect(queryWidget, &QueryWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
     connect(pathSearchWidget, &PathSearchWidget::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
     connect(this, &MainWindow::statusBarMessage, ui->statusBar, &QStatusBar::showMessage);
+
+    connect(this->statusBar(), &QStatusBar::messageChanged, this, &MainWindow::statusBarReady);
 
     if (BZ_DEBUG) {
         ui->filterTree->setHeaderHidden(false);
@@ -226,14 +234,14 @@ void MainWindow::preloadDataSets() {
     QSqlQuery query;
     qInfo() << query.exec("DROP TABLE bz");
     qInfo() << query.exec("CREATE TABLE \"bz\" (\n"
-                          "  \"file\" integer,\n"
                           "  \"time\" text(20),\n"
                           "  \"lineID\" text(3),\n"
                           "  \"stationID\" integer,\n"
                           "  \"deviceID\" integer,\n"
                           "  \"status\" integer,\n"
-                          "  \"payType\" integer,\n"
                           "  \"userID\" text(40),\n"
+                          "  \"payType\" integer,\n"
+                          "  \"file\" integer,\n"
                           "  \"dateID\" integer,\n"
                           "  \"timestamp\" integer\n"
                           ");");
@@ -300,6 +308,7 @@ void MainWindow::updateFilterWidgetImportAdjacency(QTreeWidgetItem *parent) {
     adjacencyItem->setCheckState(0, Qt::Checked);
     adjacencyItem->setFlags(adjacencyItem->flags());
     adjacencyItem->setDisabled(true);
+    adjacencyItem->setExpanded(true);
 
     auto csvItem = new QTreeWidgetItem(adjacencyItem);
     csvItem->setText(0, adjacencyCsv);
@@ -363,14 +372,68 @@ void MainWindow::updateFilterWidgetImportFields(QTreeWidgetItem *parent) {
     fieldsItem->setText(0, tr("Fields"));
     fieldsItem->setText(1, tr("FIELDS"));
     fieldsItem->setCheckState(0, Qt::Unchecked);
-    fieldsItem->setFlags(fieldsItem->flags() | Qt::ItemIsAutoTristate);
     fieldsItem->setExpanded(true);
+    fieldsItem->setFlags(fieldsItem->flags() & (~Qt::ItemIsUserCheckable) | Qt::ItemIsAutoTristate);
+
+
+    auto timeItem = new QTreeWidgetItem(fieldsItem);
+    timeItem->setText(0, tr("Time"));
+    timeItem->setText(1, tr("TIME"));
+    timeItem->setText(2, "time");
+    timeItem->setCheckState(0, Qt::Checked);
+    timeItem->setFlags(timeItem->flags() | Qt::ItemIsAutoTristate);
+    timeItem->setDisabled(true);
+
+    auto lineIdItem = new QTreeWidgetItem(fieldsItem);
+    lineIdItem->setText(0, tr("Line ID"));
+    lineIdItem->setText(1, tr("LINE_ID"));
+    lineIdItem->setText(2, "lineID");
+    lineIdItem->setCheckState(0, Qt::Checked);
+    lineIdItem->setFlags(lineIdItem->flags() | Qt::ItemIsAutoTristate);
+
+    auto stationIdItem = new QTreeWidgetItem(fieldsItem);
+    stationIdItem->setText(0, tr("Station ID"));
+    stationIdItem->setText(1, tr("STATION_ID"));
+    stationIdItem->setText(2, "stationID");
+    stationIdItem->setCheckState(0, Qt::Checked);
+    stationIdItem->setFlags(stationIdItem->flags() | Qt::ItemIsAutoTristate);
+    stationIdItem->setDisabled(true);
+
+    auto deviceIdItem = new QTreeWidgetItem(fieldsItem);
+    deviceIdItem->setText(0, tr("Device ID"));
+    deviceIdItem->setText(1, tr("DEVICE_ID"));
+    deviceIdItem->setText(2, "deviceID");
+    deviceIdItem->setCheckState(0, Qt::Unchecked);
+    deviceIdItem->setFlags(deviceIdItem->flags() | Qt::ItemIsAutoTristate);
+
+    auto statusItem = new QTreeWidgetItem(fieldsItem);
+    statusItem->setText(0, tr("Status"));
+    statusItem->setText(1, tr("STATUS"));
+    statusItem->setText(2, "status");
+    statusItem->setCheckState(0, Qt::Checked);
+    statusItem->setFlags(statusItem->flags() | Qt::ItemIsAutoTristate);
+    statusItem->setDisabled(true);
 
     auto userIdItem = new QTreeWidgetItem(fieldsItem);
     userIdItem->setText(0, tr("User ID"));
     userIdItem->setText(1, tr("USER_ID"));
-    userIdItem->setCheckState(0, Qt::Unchecked);
+    userIdItem->setText(2, "userID");
+    userIdItem->setCheckState(0, Qt::Checked);
     userIdItem->setFlags(userIdItem->flags() | Qt::ItemIsAutoTristate);
+
+    auto payTypeItem = new QTreeWidgetItem(fieldsItem);
+    payTypeItem->setText(0, tr("Payment Types"));
+    payTypeItem->setText(1, tr("PAY_TYPE"));
+    payTypeItem->setText(2, "payType");
+    payTypeItem->setCheckState(0, Qt::Unchecked);
+    payTypeItem->setFlags(payTypeItem->flags() | Qt::ItemIsAutoTristate);
+
+    curFields.clear();
+    for (int i = 0; i < fieldsItem->childCount(); ++i) {
+        auto field = fieldsItem->child(i);
+        if (!field->isDisabled() && field->checkState(0) == Qt::Checked)
+            curFields.insert(field->text(1));
+    }
 }
 
 void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, const QStringList &lines) {
@@ -411,8 +474,9 @@ void MainWindow::updateFilterWidgetFiltersFields(const QStringList &payTypes, co
 }
 
 void MainWindow::doImportAndFilterAll() {
-    updateFilterDataList();
     importFilteredDataMt();
+//  updateFilterDataList();
+//  Now in onImportFinished()
 }
 
 void MainWindow::importFilteredDataMt() {
@@ -420,7 +484,23 @@ void MainWindow::importFilteredDataMt() {
         auto startTime = QTime::currentTime();
 
         auto dataSetItem = importerItem->child(1);
-        auto userIdItem = importerItem->child(2)->child(0);
+        QMap<QString, QTreeWidgetItem *> filterItems;
+        QSet<QString> newFields;
+        QStringList sqlFields;
+        for (int i = 0; i < importerItem->child(2)->childCount(); ++i) {
+            auto field = importerItem->child(2)->child(i);
+            if (field->checkState(0) == Qt::Checked) {
+                newFields.insert(field->text(1));
+                sqlFields.append(field->text(2));
+            }
+            if (!field->isDisabled()) {
+                filterItems.insert(field->text(1), field);
+            }
+        }
+        qInfo() << newFields;
+
+        previewSqlText = QString("SELECT %1 FROM bz LIMIT 1000").arg(sqlFields.join(", "));
+        qInfo() << previewSqlText;
 
         QSet<QString> newCsvs;
         for (int i = 0; i < dataSetItem->childCount(); ++i) {
@@ -433,15 +513,8 @@ void MainWindow::importFilteredDataMt() {
         }
 
         bool needToReload = false;
-        bool needToClearUserId = false;
-
-        if (userIdItem->checkState(0) == Qt::Checked && !curUserIdChecked) {
-            curUserIdChecked = true;
-            needToReload = true;
-        } else if (userIdItem->checkState(0) == Qt::Unchecked && curUserIdChecked) {
-            curUserIdChecked = false;
-            needToClearUserId = true;
-        }
+        qInfo() << (curFields == newFields);
+        if (curFields != newFields) needToReload = true;
 
         auto threadDb = BDatabaseManager::connection("thread");
         QSqlQuery query(threadDb);
@@ -454,6 +527,8 @@ void MainWindow::importFilteredDataMt() {
             emit statusBarMessage("Removing all data...");
             if (!query.exec("DELETE FROM bz"))
                 qInfo() << query.lastError().text();
+            if (!query.exec("DROP INDEX main_index"))
+                qInfo() << query.lastError().text();
         } else {
             QList<QString> toInsert;
             QList<QString> toDelete;
@@ -462,6 +537,8 @@ void MainWindow::importFilteredDataMt() {
             if (needToReload) {
                 emit statusBarMessage("Removing all data...");
                 if (!query.exec("DELETE FROM bz"))
+                    qInfo() << query.lastError().text();
+                if (!query.exec("DROP INDEX main_index"))
                     qInfo() << query.lastError().text();
                 toInsert = newCsvs.toList();
             } else {
@@ -479,7 +556,7 @@ void MainWindow::importFilteredDataMt() {
             emit statusBarMessage("Loading data sets concurrently...");
             const QString QUERY("INSERT INTO bz VALUES (%1)");
 
-            auto worker = [this, QUERY](const QString &csv) -> QVector<QString> {
+            auto worker = [this, QUERY, newFields](const QString &csv) -> QVector<QString> {
                 auto filePath = dataSetDir.absolutePath() + QDir::separator() + csv;
                 QFile csvFile(filePath);
                 qInfo() << filePath;
@@ -496,24 +573,36 @@ void MainWindow::importFilteredDataMt() {
                 QVector<QString> queries;
                 queries.reserve(80000);
 
+                bool lineIdChecked = newFields.contains("LINE_ID");
+                bool deviceIdChecked = newFields.contains("DEVICE_ID");
+                bool userIdChecked = newFields.contains("USER_ID");
+                bool payTypeChecked = newFields.contains("PAY_TYPE");
+
+                QString lineId = "NULL";
+                QString deviceId = "NULL";
+                QString userId = "NULL";
+                QString payType = "NULL";
+
                 while (!stream.atEnd()) {
                     auto line = stream.readLine();
                     auto pieces = line.split(',');
 
                     auto _dateId = dateId[pieces[0].split(' ')[0]];
-                    QString userId;
-                    if (curUserIdChecked) userId = QString("\"%1\"").arg(pieces[5]);
-                    else userId = "NULL";
+
+                    if (lineIdChecked) lineId = QString("'%1'").arg(pieces[1]);
+                    if (deviceIdChecked) deviceId = pieces[3];
+                    if (userIdChecked) userId = QString("\"%1\"").arg(pieces[5]);
+                    if (payTypeChecked) payType = pieces[6];
 
                     QStringList queryPieces;
-                    queryPieces << QString::number(fileId[csv])
-                                << QString("'%1'").arg(pieces[0])
-                                << QString("'%1'").arg(pieces[1])
+                    queryPieces << QString("'%1'").arg(pieces[0])
+                                << lineId
                                 << pieces[2]
-                                << pieces[3]
+                                << deviceId
                                 << pieces[4]
-                                << pieces[6]
                                 << userId
+                                << payType
+                                << QString::number(fileId[csv])
                                 << QString::number(_dateId)
                                 << QString::number(BDateTime::bToLocalTimestamp(pieces[0]));
 
@@ -560,15 +649,6 @@ void MainWindow::importFilteredDataMt() {
                 emit percentageComplete((++cur) * 100 / total);
             }
 
-            // Clear userId [optional]
-            if (needToClearUserId) {
-                emit statusBarMessage("Clearing userID...");
-                emit percentageComplete(0);
-                if (!query.exec("UPDATE bz SET userId = NULL"))
-                    qInfo() << query.lastError().text();
-                emit percentageComplete(100);
-            }
-
             // Attempt to create index, if exists then ignored
             emit statusBarMessage("Creating indices...");
             emit percentageComplete(0);
@@ -599,6 +679,7 @@ void MainWindow::importFilteredDataMt() {
         threadDb.close();
 
         curCsvs = newCsvs;
+        curFields = newFields;
 
         emit statusBarMessage(
             QString("Done in %1s").arg(startTime.msecsTo(QTime::currentTime()) / 1000.0), 10000);
@@ -654,6 +735,7 @@ void MainWindow::onPreloadFinished() {
     emit statusBarMessage("Data set folder is open, click 'Apply' to load and process them.", 8000);
     setWindowTitle(QString("%1 - %2").arg(TITLE).arg(mainDir.absolutePath()));
     setMainEnabled(true);
+    ui->filterButton->setFocus();
 }
 
 void MainWindow::onImportStarted() {
@@ -668,14 +750,31 @@ void MainWindow::onImportStarted() {
 }
 
 void MainWindow::onImportFinished() {
+    if (curFields.contains("LINE_ID")) {
+        filterItem->child(0)->setDisabled(false);
+    } else {
+        filterItem->child(0)->setDisabled(true);
+        filterItem->child(0)->setCheckState(0, Qt::Checked);
+    }
+    if (curFields.contains("PAY_TYPE")) {
+        filterItem->child(1)->setDisabled(false);
+    } else {
+        filterItem->child(1)->setDisabled(true);
+        filterItem->child(1)->setCheckState(0, Qt::Checked);
+    }
+
+    updateFilterDataList();
+
     ui->filterButton->setEnabled(true);
     ui->progressBar->setValue(100);
     queryWidget->setBzEnabled(true);
     pathSearchWidget->setBzEnabled(true);
+    previewWidget->updateBz(previewSqlText);
     for (auto plotWidget:plotWidgets) {
         plotWidget->setBzEnabled(true);
     }
     setMainEnabled(true);
+    ui->tabs->setCurrentIndex(1);
 }
 
 void MainWindow::testPlot() {
@@ -728,6 +827,10 @@ void MainWindow::updateFilterDataList() {
 
 FilterDataList MainWindow::getFilterDataList() {
     return filterDataList;
+}
+
+void MainWindow::statusBarReady(const QString &message) {
+    if (message.isNull()) emit statusBarMessage("Ready");
 }
 
 

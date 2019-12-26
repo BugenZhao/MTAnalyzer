@@ -57,7 +57,7 @@ void PathSearchWidget::doSearch() {
                 QString timeInfo = "There's no enough information to get the result. \n"
                                    "Make sure you have imported the 'User ID' field, "
                                    "and try to import more data sets.";
-                QVector<QString> details;
+                QVector<QPair<QString, QString>> details;
 
                 if (from != to) {
                     auto threadDb = BDatabaseManager::connection("path_thread");
@@ -79,7 +79,7 @@ void PathSearchWidget::doSearch() {
                                                      "\t\t(\n"
                                                      "\t\t\tstationID = %1 \n"
                                                      "\t\t\tAND status = 1 \n"
-                                                     "\t\t\tAND payType <> 3 \n"
+                                                     //                                                     "\t\t\tAND payType <> 3 \n"
                                                      "\t\t) \n"
                                                      "\t\tLIMIT 20000 \n"
                                                      "\t) tmp\n"
@@ -93,7 +93,8 @@ void PathSearchWidget::doSearch() {
 
 
                     if (timeOk) {
-                        auto pathLength = path.split("-").size() - 1;
+                        auto stations = path.split(" -> ");
+                        auto pathLength = stations.size() - 1;
 
                         QVector<qlonglong> minDts;
                         while (query.next()) {
@@ -107,14 +108,27 @@ void PathSearchWidget::doSearch() {
 
                             if (minDt > pathLength * 2 && minDt <= 6 + pathLength * 4 && minDt <= 240) {
                                 minDts.push_back(minDt);
-                                details.push_back(QString("%1 - %2").arg(sTime0).arg(sTime1));
                                 qInfo() << minDt;
                             }
 
                         }
+
+                        int averageDt = BugenZhao::bAverage(minDts);
+                        auto curTime = ui->timeEdit->time();
+                        for (int i = 0; i <= pathLength; ++i) {
+                            auto timeStr = curTime.addSecs(averageDt * 60 * i / pathLength).toString(
+                                    BugenZhao::TIME_FORMAT_NO_SEC);
+                            if (i == 0)
+                                details.push_back({timeStr, QString("Depart from Station %1").arg(stations[i])});
+                            else if (i == pathLength)
+                                details.push_back({timeStr, QString("Arrive at Station %1").arg(stations[i])});
+                            else
+                                details.push_back({timeStr, QString("At Station %1").arg(stations[i])});
+                        }
+
                         if (!minDts.isEmpty()) {
                             timeInfo = QString("About %1 minutes according to %2 record(s).")
-                                    .arg(BugenZhao::bAverage(minDts)).arg(minDts.size());
+                                    .arg(averageDt).arg(minDts.size());
                         }
                     }
                     threadDb.close();
@@ -126,12 +140,12 @@ void PathSearchWidget::doSearch() {
                 model->appendRow(new QStandardItem(timeInfo));
                 model->setVerticalHeaderLabels(QStringList() << "Path" << "Estimated Time");
 
-                std::sort(details.begin(), details.end());
-                for (const auto &detail:details) model->appendRow(new QStandardItem(detail));
                 if (!details.isEmpty()) {
-                    auto labels = QStringList() << "Path" << "Estimated Time" << "Details";
-                    for (int i = 2; i <= details.size(); ++i) {
-                        labels << QString::number(i);
+                    auto labels = QStringList() << "Path" << "Estimated Time" << "Details";;
+                    model->appendRow(new QStandardItem(""));
+                    for (const auto &detail:details) {
+                        labels.append(detail.first);
+                        model->appendRow(new QStandardItem(detail.second));
                     }
                     model->setVerticalHeaderLabels(labels);
                 }

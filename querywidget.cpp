@@ -14,11 +14,18 @@ QueryWidget::QueryWidget(QWidget *parent) :
         model(new QSqlQueryModel(this)) {
     ui->setupUi(this);
     ui->examplesComboBox->setCurrentText("Examples...");
-    auto examples = QStringList() << "Examples"
-                                  << "Total Count => SELECT count(*) FROM bz"
-                                  << "Inspect Table => SELECT * FROM bz LIMIT 1000"
-                                  << "Flow of Station => SELECT stationID, count(*) flow FROM bz GROUP BY stationID ORDER BY flow DESC";
-    auto examplesModel = new QStringListModel(examples);
+
+    exampleQueries.insert("1. Total Count", "SELECT count(*) FROM bz");
+    exampleQueries.insert("2. Inspect Table", "SELECT * FROM bz LIMIT 1000");
+    exampleQueries.insert("3. Flow of Station",
+                          "SELECT stationID, count(*) flow FROM bz GROUP BY stationID ORDER BY flow DESC");
+    exampleQueries.insert("4. 'WHERE' Example", "SELECT * FROM bz WHERE stationID = 15 AND payType = 0");
+
+    auto exampleNames = QStringList() << "Examples";
+    for (const auto &name:exampleQueries.keys()) {
+        exampleNames << name;
+    }
+    auto examplesModel = new QStringListModel(exampleNames);
     ui->examplesComboBox->setModel(examplesModel);
     connect(ui->examplesComboBox, &QComboBox::currentTextChanged,
             this, &QueryWidget::setQueryText);
@@ -26,11 +33,15 @@ QueryWidget::QueryWidget(QWidget *parent) :
     ui->queryInput->setPlaceholderText(
             "AnyExplore supports any standard SQL statements to explore the entire database. "
             "Default table name is 'bz'.\n"
-            "Please see the examples on the right.");
+            "Please see the exampleNames on the right.");
 
     ui->resultTable->setModel(model);
 
     connect(ui->queryButton, &QPushButton::clicked, this, &QueryWidget::doQuery);
+    connect(ui->queryInput, &QPlainTextEdit::textChanged, this, &QueryWidget::onInputModified);
+
+    connect(this, &QueryWidget::success, this, &QueryWidget::onSuccess);
+    connect(this, &QueryWidget::failed, this, &QueryWidget::onFailed);
 }
 
 QueryWidget::~QueryWidget() {
@@ -42,6 +53,7 @@ void QueryWidget::doQuery() {
 
     if (!queryText.toUpper().startsWith("SELECT")) {
         emit statusBarMessage("Sorry, the database is select-only", 3000);
+        emit failed();
         return;
     }
 
@@ -52,11 +64,14 @@ void QueryWidget::doQuery() {
         model->query();
         while (model->canFetchMore()) model->fetchMore();
 
-        if (model->lastError().type() == QSqlError::NoError)
-                emit statusBarMessage("Done", 3000);
-        else
-                emit statusBarMessage(QString("Query error: %1").
+        if (model->lastError().type() == QSqlError::NoError) {
+            emit statusBarMessage("Done", 3000);
+            emit success();
+        } else {
+            emit statusBarMessage(QString("Query error: %1").
                     arg(model->lastError().databaseText()), 8000);
+            emit failed();
+        }
     });
 
     connect(thread, &QThread::started, this, &QueryWidget::onQueryStarted);
@@ -80,10 +95,29 @@ void QueryWidget::setBzEnabled(bool enabled) {
     ui->queryButton->setEnabled(enabled);
 }
 
-void QueryWidget::setQueryText(const QString &text) {
-    if (text.startsWith("Example")) return;
+void QueryWidget::setQueryText(const QString &name) {
+    if (name.startsWith("Example")) return;
     try {
-        ui->queryInput->setPlainText(text.split(" => ")[1]);
+        ui->queryInput->setPlainText(exampleQueries[name]);
         ui->examplesComboBox->setCurrentIndex(0);
     } catch (QException &) {}
+}
+
+void QueryWidget::onSuccess() {
+    auto palette = ui->queryInput->palette();
+    palette.setColor(QPalette::Text, Qt::darkGreen);
+    ui->queryInput->setPalette(palette);
+}
+
+void QueryWidget::onFailed() {
+    auto palette = ui->queryInput->palette();
+    palette.setColor(QPalette::Text, Qt::darkRed);
+    ui->queryInput->setPalette(palette);
+}
+
+void QueryWidget::onInputModified() {
+    auto palette = ui->queryInput->palette();
+    if (palette.color(QPalette::Text) == Qt::black) return;
+    palette.setColor(QPalette::Text, Qt::black);
+    ui->queryInput->setPalette(palette);
 }

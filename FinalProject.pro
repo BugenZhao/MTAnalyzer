@@ -37,7 +37,8 @@ SOURCES += \
         utilities/BDateTime.cpp \
         utilities/bdatabasemanager.cpp \
         withlineflowplotwidget.cpp \
-        stationflowplotwidget.cpp
+        stationflowplotwidget.cpp \
+        previewwidget.cpp
 
 HEADERS += \
         baseplotwidget.h \
@@ -52,7 +53,8 @@ HEADERS += \
         utilities/bdatabasemanager.h \
         utilities/hint.hpp \
 		withlineflowplotwidget.h \
-		stationflowplotwidget.h
+		stationflowplotwidget.h \
+		previewwidget.h
 
 FORMS += \
         flowplotwidget.ui \
@@ -62,7 +64,8 @@ FORMS += \
         querywidget.ui \
         totalflowplotwidget.ui \
         withlineflowplotwidget.ui \
-        stationflowplotwidget.ui
+        stationflowplotwidget.ui \
+        previewwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

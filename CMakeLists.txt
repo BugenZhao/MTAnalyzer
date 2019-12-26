@@ -29,6 +29,7 @@ add_executable(FinalProject main.cpp mainwindow.cpp
         totalflowplotwidget.cpp
         withlineflowplotwidget.cpp
         stationflowplotwidget.cpp
+        previewwidget.cpp
         )
 
 target_link_libraries(FinalProject Qt5::Widgets Qt5::Sql Qt5::Concurrent Qt5::Charts)

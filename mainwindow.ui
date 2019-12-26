@@ -132,6 +132,11 @@
        <zorder>hintLabel</zorder>
        <zorder>plotTabs</zorder>
       </widget>
+      <widget class="QWidget" name="tabPreview">
+       <attribute name="title">
+        <string>Preview</string>
+       </attribute>
+      </widget>
       <widget class="QWidget" name="tab2">
        <attribute name="title">
         <string>Path</string>

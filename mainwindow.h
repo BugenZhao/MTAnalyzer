@@ -13,6 +13,7 @@
 #include "utilities/BDateTime.h"
 #include "flowplotwidget.h"
 #include "preferencesdialog.h"
+#include "previewwidget.h"
 
 
 namespace Ui {
@@ -65,6 +66,7 @@ private:
     QTreeWidgetItem *filterItem = nullptr;
 
     QueryWidget *queryWidget = nullptr;
+    PreviewWidget *previewWidget = nullptr;
     PathSearchWidget *pathSearchWidget = nullptr;
     QVector<BasePlotWidget *> plotWidgets{};
 
@@ -74,10 +76,11 @@ private:
     QMap<QString, int> fileId;
     QMap<QString, int> dateId;
     QSet<QString> curCsvs;
+    QSet<QString> curFields;
 
     FilterDataList filterDataList;
 
-    bool curUserIdChecked = false;
+    QString previewSqlText;
 
     void setupBzUi();
 
@@ -122,6 +125,8 @@ private:
     void addWithLineFlowPlotTab();
 
     void addStationFlowPlotTab();
+
+    void statusBarReady(const QString &message);
 };
 
 #endif // MAINWINDOW_H

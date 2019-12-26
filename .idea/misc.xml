@@ -3,6 +3,7 @@
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="ProjectPlainTextFileTypeManager">
     <file url="file://$PROJECT_DIR$/flowplotwidget.ui" />
+    <file url="file://$PROJECT_DIR$/previewwidget.ui" />
     <file url="file://$PROJECT_DIR$/totalflowplotwidget.ui" />
   </component>
 </project>
