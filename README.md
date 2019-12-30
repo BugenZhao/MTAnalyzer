@@ -6,17 +6,17 @@
 | ![macos-badge]   |![ios-badge]   | ![ubuntu-badge]      | ![win-badge]  |
 
 
-[win-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AWindows "WindowsAction"
-[win-badge]: https://github.com/BugenZhao/FinalProject/workflows/Windows/badge.svg  "Windows"
+[win-link]: https://github.com/BugenZhao/MTAnalyzer/actions?query=workflow%3AWindows "WindowsAction"
+[win-badge]: https://github.com/BugenZhao/MTAnalyzer/workflows/Windows/badge.svg  "Windows"
 
-[ubuntu-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AUbuntu "UbuntuAction"
-[ubuntu-badge]: https://github.com/BugenZhao/FinalProject/workflows/Ubuntu/badge.svg "Ubuntu"
+[ubuntu-link]: https://github.com/BugenZhao/MTAnalyzer/actions?query=workflow%3AUbuntu "UbuntuAction"
+[ubuntu-badge]: https://github.com/BugenZhao/MTAnalyzer/workflows/Ubuntu/badge.svg "Ubuntu"
 
-[macos-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AmacOS "macOSAction"
-[macos-badge]: https://github.com/BugenZhao/FinalProject/workflows/macOS/badge.svg "macOS"
+[macos-link]: https://github.com/BugenZhao/MTAnalyzer/actions?query=workflow%3AmacOS "macOSAction"
+[macos-badge]: https://github.com/BugenZhao/MTAnalyzer/workflows/macOS/badge.svg "macOS"
 
-[ios-link]: https://github.com/BugenZhao/FinalProject/actions?query=workflow%3AiOS "iOSAction"
-[ios-badge]: https://github.com/BugenZhao/FinalProject/workflows/iOS/badge.svg "iOS"
+[ios-link]: https://github.com/BugenZhao/MTAnalyzer/actions?query=workflow%3AiOS "iOSAction"
+[ios-badge]: https://github.com/BugenZhao/MTAnalyzer/workflows/iOS/badge.svg "iOS"
 
 
 ## Introduction
@@ -35,13 +35,13 @@ your own Qt `cmake` path.
 - In terminal, run `qmake` and `make`.
 
 #### - Using Qt Creator:
-- Open `FinalProject.pro`.
+- Open `MTAnalyzer.pro`.
 - Configure the project.
 - Build and run.
 
 
 ### Run
-- Execute `./FinalProject` on Unix or directly run `FinalProject.exe` on Windows.
+- Execute `./MTAnalyzer` on Unix or directly run `MTAnalyzer.exe` on Windows.
 
 
 ## Results

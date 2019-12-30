@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(FinalProject)
+project(MTAnalyzer)
 
 set(CMAKE_CXX_STANDARD 14)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
@@ -16,7 +16,7 @@ find_package(Qt5Concurrent REQUIRED)
 find_package(Qt5Charts REQUIRED)
 
 
-add_executable(FinalProject main.cpp mainwindow.cpp
+add_executable(MTAnalyzer main.cpp mainwindow.cpp
         querywidget.cpp
         pathsearchwidget.cpp
         utilities/base.hpp
@@ -32,4 +32,4 @@ add_executable(FinalProject main.cpp mainwindow.cpp
         previewwidget.cpp
         )
 
-target_link_libraries(FinalProject Qt5::Widgets Qt5::Sql Qt5::Concurrent Qt5::Charts)
+target_link_libraries(MTAnalyzer Qt5::Widgets Qt5::Sql Qt5::Concurrent Qt5::Charts)
